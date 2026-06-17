@@ -1,0 +1,42 @@
+{
+  "name": "LogIQ — Raciocínio Lógico",
+  "short_name": "LogIQ",
+  "description": "Treine raciocínio lógico com questões de sequências, matrizes, lógica e probabilidade",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D0D1A",
+  "theme_color": "#6C63FF",
+  "lang": "pt-BR",
+  "categories": ["education", "games"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Sequências",
+      "short_name": "Sequências",
+      "description": "Treinar sequências numéricas",
+      "url": "./index.html#sequences"
+    },
+    {
+      "name": "Desafios",
+      "short_name": "Desafios",
+      "description": "Ver desafios contra IA",
+      "url": "./index.html#challenges"
+    }
+  ]
+}

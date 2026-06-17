@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>LogIQ — Treine Raciocínio Lógico</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6C63FF">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LogIQ">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── TEMAS ─────────────────────────────────────────── */
+:root {
+  --bg:        #0D0D1A;
+  --surface:   #13112B;
+  --surfaceHi: #1A1836;
+  --border:    #2A2744;
+  --border2:   #1E1B3A;
+  --violet:    #6C63FF;
+  --violetL:   #A78BFA;
+  --cyan:      #00F5C4;
+  --yellow:    #FFD166;
+  --red:       #FF4D6D;
+  --text:      #E8E6F0;
+  --muted:     #7C7A9C;
+  --bodyMuted: #B8B6D4;
+}
+[data-theme="black"] {
+  --bg:        #000000;
+  --surface:   #0A0A0A;
+  --surfaceHi: #111111;
+  --border:    #222222;
+  --border2:   #181818;
+  --muted:     #555577;
+  --bodyMuted: #9995BB;
+}
+[data-theme="white"] {
+  --bg:        #F5F4FF;
+  --surface:   #FFFFFF;
+  --surfaceHi: #EDEDFF;
+  --border:    #DDD9FF;
+  --border2:   #EEEAFF;
+  --violet:    #5A52E0;
+  --violetL:   #8B7CF8;
+  --cyan:      #00B89C;
+  --yellow:    #E6A800;
+  --red:       #E63B5A;
+  --text:      #1A1733;
+  --muted:     #7770AA;
+  --bodyMuted: #5A5588;
+}
+
+/* ── RESET ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; transition: background 0.3s, color 0.3s; }
+#app { position: fixed; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; }
+
+/* ── SCREENS ────────────────────────────────────────── */
+.screen {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  overflow-y: auto; overflow-x: hidden;
+  background: var(--bg);
+  display: none;
+}
+.screen.active { display: block; z-index: 10; }
+#screen-splash.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+/* Conteúdo centralizado com scroll */
+.screen-inner {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px 56px;
+  min-height: 100%;
+}
+
+/* ── LOGO ───────────────────────────────────────────── */
+.logo { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 44px; color: var(--text); letter-spacing: -2px; text-align: center; }
+.logo span { color: var(--violet); }
+.tagline { color: var(--muted); font-size: 12px; letter-spacing: 3px; text-align: center; margin-top: 4px; margin-bottom: 32px; }
+
+/* ── THEME TOGGLE ───────────────────────────────────── */
+.theme-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 28px; }
+.theme-btn {
+  display: flex; align-items: center; gap: 6px;
+  border: 1.5px solid var(--border); border-radius: 20px;
+  padding: 6px 14px; background: transparent; cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 12px;
+  color: var(--muted); transition: all 0.2s;
+}
+.theme-btn.active { border-color: var(--violet); color: var(--violet); background: color-mix(in srgb, var(--violet) 12%, transparent); }
+.theme-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── XP CARD ────────────────────────────────────────── */
+.xp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 20px; }
+.xp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.level-label { font-size: 11px; letter-spacing: 2px; color: var(--muted); font-family: 'Inter', sans-serif; text-transform: uppercase; }
+.level-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px; color: var(--text); }
+.xp-value { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 21px; color: var(--violet); text-align: right; }
+.xp-streak-text { font-size: 12px; color: var(--muted); text-align: right; }
+.progress-track { height: 6px; background: var(--border2); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--violet), var(--violetL)); border-radius: 3px; transition: width 0.5s ease; }
+
+/* ── SECTION ────────────────────────────────────────── */
+.section { margin-bottom: 22px; }
+.section-label { font-size: 11px; letter-spacing: 2px; color: var(--muted); font-family: 'Inter', sans-serif; text-transform: uppercase; margin-bottom: 10px; }
+
+/* ── INFO TRIGGER ───────────────────────────────────── */
+.info-trigger {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--muted); font-size: 12px; font-family: 'Inter', sans-serif;
+  border-radius: 20px; padding: 5px 12px; cursor: pointer;
+  transition: all 0.2s; margin-bottom: 22px;
+}
+.info-trigger:hover { border-color: var(--violet); color: var(--violetL); }
+
+/* ── DIFFICULTY CHIPS ───────────────────────────────── */
+.diff-row { display: flex; gap: 10px; }
+.diff-btn {
+  flex: 1; border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 10px 8px; background: transparent; cursor: pointer;
+  color: var(--muted); font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px; text-align: center; transition: all 0.2s;
+}
+.diff-btn.active { background: color-mix(in srgb, var(--active-color) 10%, transparent); border-color: var(--active-color); color: var(--active-color); }
+.diff-btn .diff-name { font-weight: 700; }
+.diff-btn .diff-meta { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+
+/* ── CATEGORY GRID ──────────────────────────────────── */
+.cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cat-btn {
+  position: relative; background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 20px 16px; cursor: pointer; text-align: center;
+  transition: transform 0.15s, box-shadow 0.2s; overflow: hidden;
+}
+.cat-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108,99,255,0.15); }
+.cat-btn .cat-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+.cat-btn .cat-name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--text); font-size: 14px; }
+.cat-glow { position: absolute; inset: 0; border-radius: 13px; pointer-events: none; }
+
+/* ── QUICK NAV ──────────────────────────────────────── */
+.quick-nav { display: flex; flex-direction: column; gap: 8px; }
+.quick-btn {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 18px; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.quick-btn:hover { border-color: var(--violet); background: var(--surfaceHi); }
+.quick-label { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 15px; color: var(--text); }
+.quick-pro { font-size: 11px; font-weight: 700; color: var(--violet); background: color-mix(in srgb, var(--violet) 14%, transparent); border: 1px solid color-mix(in srgb, var(--violet) 40%, transparent); border-radius: 20px; padding: 2px 9px; font-family: 'Space Grotesk', sans-serif; }
+
+/* ── MODAL ──────────────────────────────────────────── */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 100; overflow-y: auto; padding: 24px 16px; backdrop-filter: blur(6px); }
+.modal-overlay.open { display: flex; justify-content: center; align-items: flex-start; }
+.modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; width: 100%; max-width: 480px; overflow: hidden; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 22px; border-bottom: 1px solid var(--border2); }
+.modal-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; color: var(--text); }
+.modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; line-height: 1; padding: 4px; transition: color 0.2s; }
+.modal-close:hover { color: var(--text); }
+.modal-tabs { display: flex; border-bottom: 1px solid var(--border2); }
+.modal-tab { flex: 1; padding: 12px; background: none; border: none; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13px; color: var(--muted); border-bottom: 2px solid transparent; transition: all 0.2s; }
+.modal-tab.active { color: var(--text); border-bottom-color: var(--violet); }
+.modal-body { padding: 22px; }
+.modal-panel { display: none; }
+.modal-panel.active { display: block; }
+.case-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.case-icon { font-size: 26px; }
+.case-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px; color: var(--text); }
+.case-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.case-desc { color: var(--bodyMuted); font-size: 14px; line-height: 1.65; margin-bottom: 16px; }
+.case-example { background: var(--border2); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+.case-example-label { font-size: 11px; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 8px; font-family: 'Inter', sans-serif; }
+.case-example-text { font-size: 14px; color: var(--text); line-height: 1.6; }
+.case-example-text strong { color: var(--cyan); }
+.tip-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.tip-list li { display: flex; gap: 10px; font-size: 14px; color: var(--bodyMuted); line-height: 1.5; }
+.tip-list li::before { content: "→"; color: var(--violet); flex-shrink: 0; font-weight: 700; }
+.modal-divider { height: 1px; background: var(--border2); margin: 18px 0; }
+
+/* ── QUIZ TOPBAR ────────────────────────────────────── */
+.quiz-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.back-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; font-family: 'Inter', sans-serif; padding: 4px 0; transition: color 0.2s; }
+.back-btn:hover { color: var(--text); }
+.lives { display: flex; gap: 4px; }
+.life { font-size: 17px; transition: filter 0.3s; }
+.life.lost { filter: grayscale(1) opacity(0.2); }
+.xp-display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--violet); font-size: 16px; }
+.pills-row { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; }
+.pill { border: 1px solid; border-radius: 20px; padding: 3px 10px; font-size: 12px; font-family: 'Space Grotesk', sans-serif; }
+.q-counter { color: var(--muted); font-size: 13px; margin-left: auto; }
+
+/* ── TIMER ──────────────────────────────────────────── */
+.timer-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.timer-label { font-size: 11px; letter-spacing: 2px; color: var(--muted); font-family: 'Inter', sans-serif; text-transform: uppercase; align-self: center; }
+.timer-val { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px; transition: color 0.3s; }
+.timer-val.pulse { animation: pulse 0.6s ease-in-out infinite; }
+.timer-track { height: 6px; background: var(--border2); border-radius: 3px; overflow: hidden; margin-bottom: 18px; }
+.timer-fill { height: 100%; border-radius: 3px; transition: width 1s linear, background 0.5s; }
+
+/* ── QUESTION CARD ──────────────────────────────────── */
+.q-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px 20px; }
+.q-text { color: var(--text); font-size: 16px; line-height: 1.65; }
+.options-list { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+.opt-btn {
+  display: flex; align-items: center; gap: 12px;
+  background: transparent; border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 13px 15px; text-align: left; cursor: pointer;
+  color: var(--bodyMuted); font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.4;
+  transition: all 0.2s; width: 100%;
+}
+.opt-btn:hover:not(:disabled) { border-color: var(--violet); background: color-mix(in srgb, var(--violet) 8%, transparent); }
+.opt-btn:disabled { cursor: default; }
+.opt-btn.correct { border-color: var(--cyan); background: color-mix(in srgb, var(--cyan) 10%, transparent); color: var(--cyan); box-shadow: 0 0 16px color-mix(in srgb, var(--cyan) 20%, transparent); }
+.opt-btn.wrong   { border-color: var(--red);  background: color-mix(in srgb, var(--red)  10%, transparent); color: var(--red); }
+.opt-letter {
+  min-width: 28px; height: 28px; border-radius: 6px; display: flex;
+  align-items: center; justify-content: center;
+  background: var(--border2); color: var(--muted);
+  font-weight: 700; font-size: 13px; font-family: 'Space Grotesk', sans-serif; flex-shrink: 0; transition: all 0.2s;
+}
+.opt-btn.correct .opt-letter { background: var(--cyan); color: #000; }
+.opt-btn.wrong   .opt-letter { background: var(--red);  color: #fff; }
+
+/* ── STREAK BADGE ───────────────────────────────────── */
+.streak-badge {
+  display: none; align-items: center; gap: 5px;
+  background: linear-gradient(135deg, #FF6B35, #FF4D6D);
+  border-radius: 20px; padding: 4px 11px;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px;
+  color: #fff; box-shadow: 0 0 14px rgba(255,77,109,0.35);
+  animation: streakPop 0.3s ease;
+}
+.streak-badge.visible { display: inline-flex; }
+
+/* ── EXPLANATION ────────────────────────────────────── */
+.explanation { margin-top: 18px; padding: 14px 16px; background: var(--border2); border-radius: 10px; border-left: 3px solid var(--cyan); }
+.explanation.wrong   { border-left-color: var(--red); }
+.explanation.timeout { border-left-color: var(--yellow); }
+.expl-label { font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+.expl-divider { height: 1px; background: var(--border); margin: 10px 0; }
+.how-label { font-size: 11px; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 8px; font-family: 'Inter', sans-serif; }
+.expl-steps { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+.expl-step { display: flex; gap: 10px; align-items: flex-start; }
+.step-num { min-width: 22px; height: 22px; border-radius: 50%; background: var(--violet); color: #fff; font-size: 11px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.step-text { font-size: 13px; color: var(--bodyMuted); line-height: 1.5; }
+.step-text code { background: var(--border); padding: 1px 6px; border-radius: 4px; font-family: monospace; color: var(--cyan); font-size: 12px; }
+.expl-answer { padding: 8px 12px; background: color-mix(in srgb, var(--cyan) 8%, transparent); border-radius: 8px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; color: var(--cyan); }
+.expl-answer.wrong-ans { background: color-mix(in srgb, var(--red) 8%, transparent); color: var(--red); }
+
+/* ── NEXT BTN ───────────────────────────────────────── */
+.next-btn {
+  width: 100%; padding: 15px; margin-top: 14px;
+  background: linear-gradient(135deg, var(--violet), var(--violetL));
+  border: none; border-radius: 12px; color: #fff;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px;
+  cursor: pointer; display: none; transition: opacity 0.2s, transform 0.1s;
+}
+.next-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.next-btn.visible { display: block; }
+
+/* ── XP FLOAT ───────────────────────────────────────── */
+.xp-float {
+  position: fixed; top: 38%; left: 50%; transform: translateX(-50%);
+  color: var(--cyan); font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+  font-size: 26px; pointer-events: none; z-index: 200;
+  text-shadow: 0 0 20px var(--cyan); animation: floatUp 1.2s ease-out forwards;
+}
+
+/* ── GAMEOVER ───────────────────────────────────────── */
+.go-emoji  { font-size: 62px; text-align: center; margin-bottom: 10px; }
+.go-title  { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 28px; color: var(--red); text-align: center; }
+.go-sub    { color: var(--muted); text-align: center; margin-top: 6px; margin-bottom: 28px; }
+.stats-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 22px; }
+.stat-row  { display: flex; justify-content: space-between; padding: 13px 18px; border-bottom: 1px solid var(--border2); font-family: 'Space Grotesk', sans-serif; font-size: 15px; }
+.stat-row:last-child { border-bottom: none; }
+.stat-row span:first-child { color: var(--muted); }
+.stat-row span:last-child  { font-weight: 700; }
+.primary-btn {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg, var(--violet), var(--violetL));
+  border: none; border-radius: 12px; color: #fff;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px;
+  cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+}
+.primary-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+
+
+/* ── SPLASH ──────────────────────────────────────────── */
+#screen-splash { flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; }
+#screen-splash.active { display:flex !important; }
+.splash-brain-wrap { position:relative; width:180px; height:180px; margin-bottom:28px; }
+.splash-brain { width:180px; height:180px; }
+.splash-pulse { position:absolute; inset:-20px; border-radius:50%; border:2px solid var(--violet); opacity:0; animation:splashPulse 2.4s ease-out infinite; }
+.splash-pulse:nth-child(2) { animation-delay:0.8s; }
+.splash-pulse:nth-child(3) { animation-delay:1.6s; }
+.splash-logo { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:52px; color:var(--text); letter-spacing:-2px; animation:splashFadeUp .7s .2s both; }
+.splash-logo span { color:var(--violet); }
+.splash-tagline { font-size:12px; letter-spacing:4px; color:var(--muted); margin-top:8px; margin-bottom:52px; animation:splashFadeUp .7s .4s both; }
+.splash-btn {
+  padding:16px 48px; background:linear-gradient(135deg,var(--violet),var(--violetL));
+  border:none; border-radius:50px; color:#fff;
+  font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px;
+  cursor:pointer; animation:splashFadeUp .7s .6s both;
+  box-shadow:0 8px 32px color-mix(in srgb,var(--violet) 40%,transparent);
+  transition:transform .15s,box-shadow .15s;
+}
+.splash-btn:hover { transform:translateY(-2px); box-shadow:0 12px 40px color-mix(in srgb,var(--violet) 50%,transparent); }
+@keyframes splashPulse { 0%{transform:scale(.8);opacity:.6} 100%{transform:scale(1.6);opacity:0} }
+@keyframes splashFadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes brainFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+@keyframes brainGlow  { 0%,100%{filter:drop-shadow(0 0 8px color-mix(in srgb,var(--violet) 50%,transparent))} 50%{filter:drop-shadow(0 0 24px color-mix(in srgb,var(--violet) 80%,transparent))} }
+
+/* ── PAGE HEADER ────────────────────────────────────── */
+.page-header { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
+.page-back { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; padding:4px; line-height:1; transition:color .2s; }
+.page-back:hover { color:var(--text); }
+.page-title { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:22px; color:var(--text); }
+
+/* ── RANK LIST ──────────────────────────────────────── */
+.rank-tabs { display:flex; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:4px; margin-bottom:20px; gap:4px; }
+.rank-tab { flex:1; padding:9px; border:none; background:transparent; border-radius:9px; cursor:pointer; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--muted); transition:all .2s; }
+.rank-tab.active { background:var(--violet); color:#fff; }
+.rank-row { display:flex; align-items:center; gap:12px; padding:14px 16px; background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:8px; transition:border-color .2s; }
+.rank-row.me { border-color:var(--violet); background:color-mix(in srgb,var(--violet) 6%,var(--surface)); }
+.rank-pos { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:16px; width:32px; text-align:center; flex-shrink:0; }
+.rank-avatar { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; flex-shrink:0; }
+.rank-info { flex:1; }
+.rank-name { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:var(--text); }
+.rank-level { font-size:12px; color:var(--muted); margin-top:2px; }
+.rank-xp { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; color:var(--violet); }
+.rank-medal { font-size:20px; }
+
+/* ── CHALLENGE ──────────────────────────────────────── */
+.challenge-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:12px; }
+.challenge-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+.challenge-rival { display:flex; align-items:center; gap:10px; }
+.rival-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; flex-shrink:0; }
+.rival-name { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; color:var(--text); }
+.rival-level { font-size:12px; color:var(--muted); margin-top:2px; }
+.challenge-badge { font-size:11px; font-weight:700; font-family:'Space Grotesk',sans-serif; border-radius:20px; padding:3px 10px; border:1px solid; }
+.challenge-badge.pending  { color:var(--yellow); border-color:var(--yellow); background:color-mix(in srgb,var(--yellow) 10%,transparent); }
+.challenge-badge.active   { color:var(--cyan);   border-color:var(--cyan);   background:color-mix(in srgb,var(--cyan)   10%,transparent); }
+.challenge-badge.win      { color:var(--cyan);   border-color:var(--cyan);   background:color-mix(in srgb,var(--cyan)   10%,transparent); }
+.challenge-badge.lose     { color:var(--red);    border-color:var(--red);    background:color-mix(in srgb,var(--red)    10%,transparent); }
+.challenge-badge.draw     { color:var(--muted);  border-color:var(--border); background:transparent; }
+.challenge-meta { font-size:13px; color:var(--muted); margin-bottom:14px; }
+.challenge-scores { display:flex; gap:10px; margin-bottom:14px; }
+.score-box { flex:1; background:var(--border2); border-radius:10px; padding:10px 12px; text-align:center; }
+.score-box.winner { background:color-mix(in srgb,var(--cyan) 12%,transparent); border:1px solid color-mix(in srgb,var(--cyan) 30%,transparent); }
+.score-who { font-size:11px; color:var(--muted); margin-bottom:4px; }
+.score-val { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:22px; color:var(--text); }
+.score-box.winner .score-val { color:var(--cyan); }
+.challenge-btn { width:100%; padding:12px; background:linear-gradient(135deg,var(--violet),var(--violetL)); border:none; border-radius:10px; color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; cursor:pointer; transition:opacity .2s; }
+.challenge-btn:hover { opacity:.88; }
+.new-challenge-btn { width:100%; padding:14px; background:transparent; border:1.5px dashed var(--border); border-radius:14px; color:var(--muted); font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px; cursor:pointer; margin-bottom:20px; transition:all .2s; }
+.new-challenge-btn:hover { border-color:var(--violet); color:var(--violet); }
+
+/* ── CHALLENGE QUIZ overlay ─────────────────────────── */
+.rival-bar { display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:16px; }
+.rival-bar-avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; font-family:'Space Grotesk',sans-serif; }
+.rival-bar-info { flex:1; }
+.rival-bar-name { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px; color:var(--text); }
+.rival-bar-progress { height:4px; background:var(--border2); border-radius:2px; margin-top:5px; overflow:hidden; }
+.rival-bar-fill { height:100%; border-radius:2px; background:var(--red); transition:width .4s; }
+.vs-score { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:16px; color:var(--text); }
+
+/* ── HISTORY ─────────────────────────────────────────── */
+.history-filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+.filter-btn { padding:6px 14px; border:1px solid var(--border); border-radius:20px; background:transparent; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:12px; color:var(--muted); cursor:pointer; transition:all .2s; }
+.filter-btn.active { border-color:var(--violet); color:var(--violet); background:color-mix(in srgb,var(--violet) 12%,transparent); }
+.history-row { display:flex; align-items:center; gap:12px; padding:14px 16px; background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:8px; }
+.history-icon { font-size:22px; flex-shrink:0; width:32px; text-align:center; }
+.history-info { flex:1; }
+.history-cat  { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; color:var(--text); }
+.history-meta { font-size:12px; color:var(--muted); margin-top:3px; }
+.history-right { text-align:right; }
+.history-acc  { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; }
+.history-xp   { font-size:12px; color:var(--muted); margin-top:2px; }
+.history-empty { text-align:center; padding:60px 20px; color:var(--muted); font-size:15px; }
+.stats-summary { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+.stat-mini { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; text-align:center; }
+.stat-mini-val { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:22px; color:var(--violet); }
+.stat-mini-lbl { font-size:11px; color:var(--muted); margin-top:4px; }
+
+/* ── ANIMATIONS ─────────────────────────────────────── */
+
+/* ── CHALLENGE RESULT ANIMATIONS ─────────────────────── */
+@keyframes crEmojiPop { 0%{transform:scale(0) rotate(-10deg);opacity:0} 70%{transform:scale(1.2) rotate(5deg)} 100%{transform:scale(1) rotate(0);opacity:1} }
+@keyframes crFadeUp   { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+@keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+
+@keyframes floatUp   { 0% { opacity:1; transform:translateX(-50%) translateY(0); } 100% { opacity:0; transform:translateX(-50%) translateY(-60px); } }
+@keyframes pulse     { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
+@keyframes streakPop { 0% { transform:scale(0.7); opacity:0; } 70% { transform:scale(1.1); } 100% { transform:scale(1); opacity:1; } }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══ SPLASH ══════════════════════════════════════════ -->
+<div id="screen-splash" class="screen active">
+  <div class="splash-brain-wrap">
+    <div class="splash-pulse"></div>
+    <div class="splash-pulse"></div>
+    <div class="splash-pulse"></div>
+    <svg class="splash-brain" viewBox="0 0 200 200" style="animation:brainFloat 3s ease-in-out infinite,brainGlow 3s ease-in-out infinite">
+      <defs>
+        <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#6C63FF"/>
+          <stop offset="100%" style="stop-color:#A78BFA"/>
+        </linearGradient>
+        <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#A78BFA"/>
+          <stop offset="100%" style="stop-color:#00F5C4"/>
+        </linearGradient>
+      </defs>
+      <!-- Cérebro SVG desenhado à mão -->
+      <!-- Hemisfério direito -->
+      <path d="M105 55 C125 48, 155 52, 162 72 C170 88, 165 108, 155 120 C148 130, 140 138, 130 142 C125 144, 120 143, 118 138 L115 100 Z"
+        fill="url(#bg1)" opacity="0.9"/>
+      <!-- Hemisfério esquerdo -->
+      <path d="M95 55 C75 48, 45 52, 38 72 C30 88, 35 108, 45 120 C52 130, 60 138, 70 142 C75 144, 80 143, 82 138 L85 100 Z"
+        fill="url(#bg2)" opacity="0.9"/>
+      <!-- Corpo central -->
+      <path d="M85 50 C85 40, 95 34, 100 34 C105 34, 115 40, 115 50 L118 138 C115 148, 108 152, 100 152 C92 152, 85 148, 82 138 Z"
+        fill="url(#bg1)" opacity="0.85"/>
+      <!-- Sulcos hemisfério direito -->
+      <path d="M120 70 C130 75, 148 78, 152 90" stroke="white" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round"/>
+      <path d="M122 88 C132 92, 148 95, 150 108" stroke="white" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round"/>
+      <path d="M118 106 C128 110, 140 114, 142 124" stroke="white" stroke-width="1.5" fill="none" opacity="0.35" stroke-linecap="round"/>
+      <!-- Sulcos hemisfério esquerdo -->
+      <path d="M80 70 C70 75, 52 78, 48 90" stroke="white" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round"/>
+      <path d="M78 88 C68 92, 52 95, 50 108" stroke="white" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round"/>
+      <path d="M82 106 C72 110, 60 114, 58 124" stroke="white" stroke-width="1.5" fill="none" opacity="0.35" stroke-linecap="round"/>
+      <!-- Corpo caloso (divisão central) -->
+      <line x1="100" y1="52" x2="100" y2="148" stroke="white" stroke-width="1.5" opacity="0.3"/>
+      <!-- Brilhos -->
+      <ellipse cx="130" cy="65" rx="8" ry="5" fill="white" opacity="0.25" transform="rotate(-20 130 65)"/>
+      <ellipse cx="70" cy="65" rx="8" ry="5" fill="white" opacity="0.25" transform="rotate(20 70 65)"/>
+      <!-- Neurônios decorativos ao redor -->
+      <circle cx="168" cy="95" r="4" fill="#00F5C4" opacity="0.7"/>
+      <line x1="164" y1="95" x2="156" y2="95" stroke="#00F5C4" stroke-width="1.5" opacity="0.5"/>
+      <circle cx="32" cy="95" r="4" fill="#A78BFA" opacity="0.7"/>
+      <line x1="36" y1="95" x2="44" y2="95" stroke="#A78BFA" stroke-width="1.5" opacity="0.5"/>
+      <circle cx="100" cy="22" r="4" fill="#6C63FF" opacity="0.7"/>
+      <line x1="100" y1="26" x2="100" y2="34" stroke="#6C63FF" stroke-width="1.5" opacity="0.5"/>
+      <circle cx="155" cy="145" r="3" fill="#FFD166" opacity="0.6"/>
+      <line x1="152" y1="143" x2="145" y2="138" stroke="#FFD166" stroke-width="1.2" opacity="0.4"/>
+      <circle cx="45" cy="145" r="3" fill="#FF4D6D" opacity="0.6"/>
+      <line x1="48" y1="143" x2="55" y2="138" stroke="#FF4D6D" stroke-width="1.2" opacity="0.4"/>
+    </svg>
+  </div>
+  <div class="splash-logo">LOG<span>IQ</span></div>
+  <div class="splash-tagline">TREINE · ACELERE · DOMINE</div>
+  <button class="splash-btn" onclick="showScreen('home');updateHomeXP()">Começar →</button>
+</div>
+
+<!-- ══ HOME ══════════════════════════════════════════ -->
+<div id="screen-home" class="screen"><div class="screen-inner">
+
+  <div class="logo">LOG<span>IQ</span></div>
+  <div class="tagline">TREINE · ACELERE · DOMINE</div>
+
+  <!-- Theme toggle -->
+  <div class="theme-row">
+    <button class="theme-btn active" id="theme-night" onclick="setTheme('night')">
+      <span class="theme-dot" style="background:#0D0D1A;border:1.5px solid #6C63FF"></span>
+      Noite
+    </button>
+    <button class="theme-btn" id="theme-black" onclick="setTheme('black')">
+      <span class="theme-dot" style="background:#000;border:1.5px solid #555"></span>
+      Preto
+    </button>
+    <button class="theme-btn" id="theme-white" onclick="setTheme('white')">
+      <span class="theme-dot" style="background:#F5F4FF;border:1.5px solid #5A52E0"></span>
+      Branco
+    </button>
+  </div>
+
+  <!-- XP Card -->
+  <div class="xp-card">
+    <div class="xp-header">
+      <div>
+        <div class="level-label" id="home-level-num">NÍVEL 1</div>
+        <div class="level-name" id="home-level-name">Aprendiz</div>
+      </div>
+      <div>
+        <div class="xp-value" id="home-xp">0 XP</div>
+        <div class="xp-streak-text" id="home-best-streak">melhor streak: 🔥0</div>
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="home-xp-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- Info trigger -->
+  <button class="info-trigger" onclick="openModal()">ℹ Como funcionam os casos?</button>
+
+  <!-- Difficulty -->
+  <div class="section">
+    <div class="section-label">Dificuldade</div>
+    <div class="diff-row">
+      <button class="diff-btn" data-diff="easy"   style="--active-color:#00F5C4" onclick="selectDiff('easy')">
+        <div class="diff-name">Fácil</div><div class="diff-meta">10 XP · 45s</div>
+      </button>
+      <button class="diff-btn active" data-diff="medium" style="--active-color:#FFD166" onclick="selectDiff('medium')">
+        <div class="diff-name">Médio</div><div class="diff-meta">25 XP · 30s</div>
+      </button>
+      <button class="diff-btn" data-diff="hard"   style="--active-color:#FF4D6D" onclick="selectDiff('hard')">
+        <div class="diff-name">Difícil</div><div class="diff-meta">50 XP · 20s</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Categories -->
+  <div class="section">
+    <div class="section-label">Escolha a categoria</div>
+    <div class="cat-grid">
+      <button class="cat-btn" style="border-color:#6C63FF" onclick="startQuiz('sequences')">
+        <span class="cat-icon">⟨n⟩</span><span class="cat-name">Sequências</span>
+        <div class="cat-glow" style="background:rgba(108,99,255,0.07)"></div>
+      </button>
+      <button class="cat-btn" style="border-color:#00C6FF" onclick="startQuiz('matrices')">
+        <span class="cat-icon">⊞</span><span class="cat-name">Matrizes</span>
+        <div class="cat-glow" style="background:rgba(0,198,255,0.07)"></div>
+      </button>
+      <button class="cat-btn" style="border-color:#A78BFA" onclick="startQuiz('propositional')">
+        <span class="cat-icon">∴</span><span class="cat-name">Lógica</span>
+        <div class="cat-glow" style="background:rgba(167,139,250,0.07)"></div>
+      </button>
+      <button class="cat-btn" style="border-color:#00F5C4" onclick="startQuiz('probability')">
+        <span class="cat-icon">𝑃</span><span class="cat-name">Probabilidade</span>
+        <div class="cat-glow" style="background:rgba(0,245,196,0.07)"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Quick nav -->
+  <div class="quick-nav">
+    <button class="quick-btn" onclick="showScreen('screen-ranking')">
+      <span class="quick-label">🏆 Ranking</span>
+      <span style="color:var(--muted);font-size:13px">→</span>
+    </button>
+    <button class="quick-btn" onclick="openChallenges()">
+      <span class="quick-label">⚔️ Desafios</span>
+      <span id="challenge-badge-count" style="display:none;background:var(--red);color:#fff;font-size:11px;font-weight:700;font-family:'Space Grotesk',sans-serif;border-radius:20px;padding:2px 8px"></span>
+      <span style="color:var(--muted);font-size:13px">→</span>
+    </button>
+    <button class="quick-btn" onclick="openHistory()">
+      <span class="quick-label">📊 Histórico</span>
+      <span style="color:var(--muted);font-size:13px">→</span>
+    </button>
+  </div>
+
+</div><!-- /screen-home -->
+</div><!-- /screen-inner -->
+
+<!-- ══ QUIZ ══════════════════════════════════════════ -->
+<div id="screen-quiz" class="screen"><div class="screen-inner">
+  <div class="quiz-topbar">
+    <button class="back-btn" onclick="goHome()">← Sair</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="streak-badge" id="streak-badge">🔥 <span id="streak-num">0</span>x</div>
+      <div class="lives">
+        <span class="life" id="life-1">❤️</span>
+        <span class="life" id="life-2">❤️</span>
+        <span class="life" id="life-3">❤️</span>
+      </div>
+    </div>
+    <div class="xp-display" id="quiz-xp">0 XP</div>
+  </div>
+
+  <div class="pills-row">
+    <span class="pill" id="cat-pill"></span>
+    <span class="pill" id="diff-pill"></span>
+    <span class="q-counter" id="q-counter">#1</span>
+  </div>
+
+  <div class="timer-row">
+    <span class="timer-label">Tempo</span>
+    <span class="timer-val" id="timer-val">—</span>
+  </div>
+  <div class="timer-track">
+    <div class="timer-fill" id="timer-fill" style="width:100%;background:#00F5C4"></div>
+  </div>
+
+  <div class="q-card" id="question-area">
+    <div style="text-align:center;padding:40px 0;color:var(--muted)">Carregando…</div>
+  </div>
+
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">Próxima questão →</button>
+</div>
+</div><!-- /screen-inner -->
+
+<!-- ══ GAMEOVER ══════════════════════════════════════ -->
+<div id="screen-gameover" class="screen"><div class="screen-inner">
+  <div class="go-emoji">💀</div>
+  <div class="go-title">Game Over</div>
+  <div class="go-sub">Sem vidas restantes</div>
+  <div class="stats-card">
+    <div class="stat-row"><span>Questões</span><span id="go-total">0</span></div>
+    <div class="stat-row"><span>Acertos</span><span id="go-correct">0</span></div>
+    <div class="stat-row"><span>Erros</span><span id="go-wrong">0</span></div>
+    <div class="stat-row"><span>Streak máx.</span><span id="go-streak">🔥0</span></div>
+    <div class="stat-row"><span>XP ganho</span><span id="go-xp">+0</span></div>
+  </div>
+  <button class="primary-btn" onclick="goHome()">Voltar ao início</button>
+</div>
+
+</div><!-- /#app -->
+</div><!-- /screen-inner -->
+
+<!-- ══ RANKING ══════════════════════════════════════ -->
+<div id="screen-ranking" class="screen"><div class="screen-inner">
+  <div class="page-header">
+    <button class="page-back" onclick="goHome()">←</button>
+    <div class="page-title">🏆 Ranking</div>
+  </div>
+  <div class="rank-tabs">
+    <button class="rank-tab active" onclick="switchRankTab('global')">Global</button>
+    <button class="rank-tab" onclick="switchRankTab('week')">Esta semana</button>
+    <button class="rank-tab" onclick="switchRankTab('cat')">Por categoria</button>
+  </div>
+  <div id="ranking-list"></div>
+  <div id="my-rank-bar" style="margin-top:16px;padding:14px 16px;background:color-mix(in srgb,var(--violet) 8%,var(--surface));border:1.5px solid var(--violet);border-radius:12px;display:flex;justify-content:space-between;align-items:center">
+    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--violet)">Sua posição</span>
+    <span id="my-rank-pos" style="font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:18px;color:var(--violet)">—</span>
+  </div>
+</div>
+</div><!-- /screen-inner -->
+
+<!-- ══ DESAFIOS ══════════════════════════════════════ -->
+<div id="screen-challenges" class="screen"><div class="screen-inner">
+  <div class="page-header">
+    <button class="page-back" onclick="goHome()">←</button>
+    <div class="page-title">⚔️ Desafios</div>
+  </div>
+  <button class="new-challenge-btn" onclick="openNewChallenge()">+ Novo desafio contra IA</button>
+  <div id="challenges-list"></div>
+</div>
+
+<!-- Modal novo desafio -->
+<div class="modal-overlay" id="new-challenge-modal" onclick="if(event.target===this)closeNewChallenge()">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-header">
+      <div class="modal-title">Novo Desafio</div>
+      <button class="modal-close" onclick="closeNewChallenge()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="section-label" style="margin-bottom:8px">Rival</div>
+      <div id="rival-picker" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+      <div class="section-label" style="margin-bottom:8px">Categoria</div>
+      <div id="cat-picker" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px"></div>
+      <div class="section-label" style="margin-bottom:8px">Dificuldade</div>
+      <div id="diff-picker" style="display:flex;gap:8px;margin-bottom:24px"></div>
+      <button class="challenge-btn" onclick="startChallenge()">Iniciar desafio</button>
+    </div>
+  </div>
+</div>
+</div><!-- /screen-inner -->
+
+<!-- ══ QUIZ DE DESAFIO ═══════════════════════════════ -->
+<div id="screen-challenge-quiz" class="screen"><div class="screen-inner">
+  <div class="quiz-topbar">
+    <button class="back-btn" onclick="abandonChallenge()">← Desistir</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="streak-badge" id="cq-streak-badge">🔥 <span id="cq-streak-num">0</span>x</div>
+      <div class="lives">
+        <span class="life" id="cq-life-1">❤️</span>
+        <span class="life" id="cq-life-2">❤️</span>
+        <span class="life" id="cq-life-3">❤️</span>
+      </div>
+    </div>
+    <div class="vs-score" id="cq-score-display">0 × 0</div>
+  </div>
+
+  <!-- Rival bar -->
+  <div class="rival-bar">
+    <div class="rival-bar-avatar" id="cq-rival-avatar" style="background:#FF4D6D22;color:#FF4D6D">?</div>
+    <div class="rival-bar-info">
+      <div class="rival-bar-name" id="cq-rival-name">Rival</div>
+      <div class="rival-bar-progress"><div class="rival-bar-fill" id="cq-rival-fill" style="width:0%"></div></div>
+    </div>
+    <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--red)" id="cq-rival-score">0</div>
+  </div>
+
+  <div class="pills-row">
+    <span class="pill" id="cq-cat-pill"></span>
+    <span class="pill" id="cq-diff-pill"></span>
+    <span class="q-counter" id="cq-counter">#1</span>
+  </div>
+
+  <div class="timer-row">
+    <span class="timer-label">Tempo</span>
+    <span class="timer-val" id="cq-timer-val">—</span>
+  </div>
+  <div class="timer-track">
+    <div class="timer-fill" id="cq-timer-fill" style="width:100%;background:#00F5C4"></div>
+  </div>
+
+  <div class="q-card" id="cq-question-area">
+    <div style="text-align:center;padding:40px 0;color:var(--muted)">Carregando…</div>
+  </div>
+  <button class="next-btn" id="cq-next-btn" onclick="cqNextQuestion()">Próxima questão →</button>
+</div>
+</div><!-- /screen-inner -->
+
+<!-- ══ RESULTADO DE DESAFIO ══════════════════════════ -->
+<div id="screen-challenge-result" class="screen"><div class="screen-inner">
+  <div style="text-align:center;padding:32px 0 24px">
+    <div id="cr-emoji" style="font-size:64px;margin-bottom:12px">⚔️</div>
+    <div id="cr-title" style="font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:28px;color:var(--text)"></div>
+    <div id="cr-sub" style="color:var(--muted);margin-top:6px;font-size:15px"></div>
+  </div>
+  <div class="challenge-scores" style="margin-bottom:20px">
+    <div class="score-box" id="cr-my-box">
+      <div class="score-who">Você</div>
+      <div class="score-val" id="cr-my-score">0</div>
+    </div>
+    <div class="score-box" id="cr-rival-box">
+      <div class="score-who" id="cr-rival-who">Rival</div>
+      <div class="score-val" id="cr-rival-score">0</div>
+    </div>
+  </div>
+  <div class="stats-card" style="margin-bottom:20px">
+    <div class="stat-row"><span>Acertos</span><span id="cr-correct">0</span></div>
+    <div class="stat-row"><span>Erros</span><span id="cr-wrong">0</span></div>
+    <div class="stat-row"><span>XP ganho</span><span id="cr-xp">+0</span></div>
+  </div>
+  <button class="primary-btn" style="margin-bottom:10px" onclick="openChallenges()">Ver todos os desafios</button>
+  <button class="primary-btn" style="background:var(--surface);border:1px solid var(--border);color:var(--text)" onclick="goHome()">Voltar ao início</button>
+</div>
+</div><!-- /screen-inner -->
+
+<!-- ══ HISTÓRICO ══════════════════════════════════════ -->
+<div id="screen-history" class="screen"><div class="screen-inner">
+  <div class="page-header">
+    <button class="page-back" onclick="goHome()">←</button>
+    <div class="page-title">📊 Histórico</div>
+  </div>
+  <div class="stats-summary" id="history-summary"></div>
+  <div class="history-filters" id="history-filters">
+    <button class="filter-btn active" onclick="filterHistory('all')">Todas</button>
+    <button class="filter-btn" onclick="filterHistory('sequences')">⟨n⟩ Seq.</button>
+    <button class="filter-btn" onclick="filterHistory('matrices')">⊞ Matrizes</button>
+    <button class="filter-btn" onclick="filterHistory('propositional')">∴ Lógica</button>
+    <button class="filter-btn" onclick="filterHistory('probability')">𝑃 Prob.</button>
+  </div>
+  <div id="history-list"></div>
+</div>
+</div><!-- /screen-inner -->
+
+
+<!-- ══ INFO MODAL ════════════════════════════════════ -->
+<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">Como funcionam os casos</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchTab(0)">⟨n⟩ Seq.</button>
+      <button class="modal-tab" onclick="switchTab(1)">⊞ Matrizes</button>
+      <button class="modal-tab" onclick="switchTab(2)">∴ Lógica</button>
+      <button class="modal-tab" onclick="switchTab(3)">𝑃 Prob.</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="modal-panel active" id="tab-0">
+        <div class="case-header"><span class="case-icon">⟨n⟩</span>
+          <div><div class="case-title">Sequências Numéricas</div><div class="case-subtitle">PA, PG, Fibonacci, diferenças de ordem superior</div></div>
+        </div>
+        <p class="case-desc">Uma série de números segue uma regra oculta. Você deve identificar o padrão e determinar o próximo elemento. Um dos tipos mais comuns em testes de QI, concursos e seleções técnicas.</p>
+        <div class="case-example">
+          <div class="case-example-label">EXEMPLO</div>
+          <div class="case-example-text">2 · 4 · 8 · 16 · ___<br>Resposta: <strong>32</strong> — cada termo é multiplicado por 2 (PG de razão 2)</div>
+        </div>
+        <div class="modal-divider"></div>
+        <div class="section-label">Dicas para resolver</div>
+        <ul class="tip-list">
+          <li>Calcule as diferenças entre termos consecutivos. Se constante → PA.</li>
+          <li>Calcule as razões entre termos. Se constante → PG.</li>
+          <li>Se as diferenças não forem constantes, calcule as diferenças das diferenças (2ª ordem).</li>
+          <li>Atenção a padrões alternados: pode haver dois subpadrões intercalados.</li>
+          <li>Números primos, quadrados perfeitos e fatoriais são padrões clássicos.</li>
+        </ul>
+      </div>
+
+      <div class="modal-panel" id="tab-1">
+        <div class="case-header"><span class="case-icon">⊞</span>
+          <div><div class="case-title">Matrizes e Padrões</div><div class="case-subtitle">Grades 3×3, conjuntos e analogias visuais</div></div>
+        </div>
+        <p class="case-desc">Uma grade de figuras ou valores é apresentada com uma célula ausente. Você identifica a regra que conecta linhas, colunas e diagonais para completar o espaço. Muito usados em testes de raciocínio não-verbal (tipo Raven).</p>
+        <div class="case-example">
+          <div class="case-example-label">EXEMPLO</div>
+          <div class="case-example-text">1 · 2 · 3 / 4 · 5 · 6 / 7 · 8 · <strong>?</strong><br>Resposta: <strong>9</strong> — sequência de 1 a 9</div>
+        </div>
+        <div class="modal-divider"></div>
+        <div class="section-label">Dicas para resolver</div>
+        <ul class="tip-list">
+          <li>Analise cada linha da esquerda para a direita em busca de padrão.</li>
+          <li>Depois analise cada coluna de cima para baixo.</li>
+          <li>Verifique se há padrão nas diagonais.</li>
+          <li>Operações comuns: soma, subtração, multiplicação entre células da mesma linha/coluna.</li>
+          <li>Em matrizes visuais: rotação, espelhamento, adição/remoção de elementos.</li>
+        </ul>
+      </div>
+
+      <div class="modal-panel" id="tab-2">
+        <div class="case-header"><span class="case-icon">∴</span>
+          <div><div class="case-title">Lógica Proposicional</div><div class="case-subtitle">Se/então, silogismos e inferências</div></div>
+        </div>
+        <p class="case-desc">Proposições são dadas como verdadeiras e você deve identificar qual conclusão se segue necessariamente. Testa raciocínio dedutivo — crucial em seleções para consultorias, bancos e big techs.</p>
+        <div class="case-example">
+          <div class="case-example-label">EXEMPLO</div>
+          <div class="case-example-text">"Todo engenheiro sabe programar. João sabe programar."<br>Conclusão válida? <strong>Não.</strong> João pode saber programar sem ser engenheiro. (Falácia da afirmação do consequente)</div>
+        </div>
+        <div class="modal-divider"></div>
+        <div class="section-label">Conceitos essenciais</div>
+        <ul class="tip-list">
+          <li><strong style="color:var(--violetL)">Modus Ponens:</strong> Se P→Q e P é verdade, então Q é verdade.</li>
+          <li><strong style="color:var(--violetL)">Modus Tollens:</strong> Se P→Q e Q é falso, então P é falso.</li>
+          <li><strong style="color:var(--violetL)">Silogismo:</strong> Se P→Q e Q→R, então P→R (transitividade).</li>
+          <li>Cuidado com "alguns", "nenhum", "todos" — quantificadores mudam tudo.</li>
+          <li>Contraposição: P→Q é equivalente a ¬Q→¬P.</li>
+        </ul>
+      </div>
+
+      <div class="modal-panel" id="tab-3">
+        <div class="case-header"><span class="case-icon">𝑃</span>
+          <div><div class="case-title">Probabilidade e Combinatória</div><div class="case-subtitle">Contagem, arranjos e chances</div></div>
+        </div>
+        <p class="case-desc">Problemas que envolvem calcular a chance de um evento ocorrer ou contar o número de formas de organizar/escolher elementos. Frequentes em seleções de fintechs, consultorias e empresas quantitativas.</p>
+        <div class="case-example">
+          <div class="case-example-label">EXEMPLO</div>
+          <div class="case-example-text">"Uma urna tem 3 bolas vermelhas e 2 azuis. P(vermelha)?"<br>Resposta: <strong>3/5 = 60%</strong> (favoráveis ÷ total)</div>
+        </div>
+        <div class="modal-divider"></div>
+        <div class="section-label">Fórmulas chave</div>
+        <ul class="tip-list">
+          <li><strong style="color:var(--cyan)">P(A) = favoráveis / total</strong> — definição clássica.</li>
+          <li><strong style="color:var(--cyan)">Combinação C(n,k)</strong> = n! / (k! × (n-k)!) — sem ordem.</li>
+          <li><strong style="color:var(--cyan)">Permutação P(n)</strong> = n! — todos os elementos.</li>
+          <li>Independentes: P(A e B) = P(A) × P(B).</li>
+          <li>Condicional: P(A|B) = P(A e B) / P(B).</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+
+// ── NULL-SAFE HELPERS ────────────────────────────────
+function $id(id) { return document.getElementById(id); }
+function $set(id, prop, val) { const el=$id(id); if(el) el[prop]=val; }
+function $cls(id) { const el=$id(id); return el ? el.classList : { add:()=>{}, remove:()=>{}, toggle:()=>{} }; }
+
+// ── ESTADO ───────────────────────────────────────────
+const CATEGORIES = {
+  sequences:     { label:'Sequências',   icon:'⟨n⟩', color:'#6C63FF' },
+  matrices:      { label:'Matrizes',     icon:'⊞',   color:'#00C6FF' },
+  propositional: { label:'Lógica',       icon:'∴',   color:'#A78BFA' },
+  probability:   { label:'Probabilidade',icon:'𝑃',   color:'#00F5C4' },
+};
+const DIFFICULTIES = {
+  easy:   { label:'Fácil',   time:45, xp:10, color:'#00F5C4' },
+  medium: { label:'Médio',   time:30, xp:25, color:'#FFD166' },
+  hard:   { label:'Difícil', time:20, xp:50, color:'#FF4D6D' },
+};
+const XP_THRESHOLDS = [0,100,250,500,900,1400,2100,3000,5000];
+const LEVEL_NAMES   = ['Aprendiz','Analista','Raciocínio','Estrategista','Expert','Mestre','Gênio','Lendário','Imortal'];
+
+let state = {
+  xp:0, bestStreak:0, difficulty:'medium', category:null,
+  lives:3, streak:0, sessionXp:0, sessionCorrect:0, sessionWrong:0, sessionTotal:0,
+  questionCount:0, question:null, answered:false, selectedOption:null,
+  timerInterval:null, timeLeft:0, theme:'night',
+  sessionHistory:[],
+};
+
+// ── TEMA ─────────────────────────────────────────────
+function setTheme(t) {
+  state.theme = t;
+  document.documentElement.setAttribute('data-theme', t === 'black' ? 'black' : '');
+  $cls('theme-night').toggle('active', t === 'night');
+  $cls('theme-black').toggle('active', t === 'black');
+  localStorage.setItem('logiq-theme', t);
+}
+(function() {
+  const saved = localStorage.getItem('logiq-theme') || 'night';
+  setTheme(saved);
+})();
+
+// ── XP / NÍVEL ───────────────────────────────────────
+function getLevel(xp) {
+  let l = 0;
+  for (let i = 0; i < XP_THRESHOLDS.length; i++) if (xp >= XP_THRESHOLDS[i]) l = i;
+  return l;
+}
+function updateHomeXP() {
+  const lvl   = getLevel(state.xp);
+  const xpIn  = state.xp - XP_THRESHOLDS[lvl];
+  const xpTo  = lvl < XP_THRESHOLDS.length-1 ? XP_THRESHOLDS[lvl+1]-XP_THRESHOLDS[lvl] : 1;
+  $set('home-level-num','textContent','NÍVEL ' + (lvl+1));
+  $set('home-level-name','textContent',LEVEL_NAMES[lvl]);
+  $set('home-xp','textContent',state.xp + ' XP');
+  $set('home-best-streak','textContent','melhor streak: 🔥' + state.bestStreak);
+  $set('home-xp-bar','style.width',Math.min((xpIn/xpTo)*100,100) + '%');
+}
+
+// ── SCREENS ──────────────────────────────────────────
+function onSplashStart() {
+  loadData();
+  updateHomeXP();
+  // Desativar splash explicitamente
+  var splash = document.getElementById('screen-splash');
+  if (splash) splash.classList.remove('active');
+  // Ativar home explicitamente
+  var home = document.getElementById('screen-home');
+  if (home) home.classList.add('active');
+}
+
+function showScreen(id) {
+  // Normaliza: aceita 'home' ou 'screen-home'
+  const elId = id.startsWith('screen-') ? id : 'screen-' + id;
+  // Desativa todas
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+  });
+  // Ativa a alvo
+  const el = document.getElementById(elId);
+  if (el) {
+    el.classList.add('active');
+    el.scrollTop = 0;
+  } else {
+    console.warn('showScreen: não encontrado:', elId);
+  }
+}
+
+// ── DIFICULDADE ───────────────────────────────────────
+function selectDiff(d) {
+  state.difficulty = d;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.toggle('active', b.dataset.diff === d));
+}
+
+// ── MODAL ────────────────────────────────────────────
+function openModal()  { $cls('modal').add('open'); }
+function closeModal() { $cls('modal').remove('open'); }
+function handleOverlayClick(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+function switchTab(idx) {
+  document.querySelectorAll('.modal-tab').forEach((t,i)  => t.classList.toggle('active', i===idx));
+  document.querySelectorAll('.modal-panel').forEach((p,i) => p.classList.toggle('active', i===idx));
+}
+
+
+
+// ── INICIO DO QUIZ ────────────────────────────────────
+function startQuiz(cat) {
+  state.category = cat;
+  state.lives = 3; state.streak = 0;
+  state.sessionXp = 0; state.sessionCorrect = 0;
+  state.sessionWrong = 0; state.sessionTotal = 0;
+  state.questionCount = 0;
+
+  [1,2,3].forEach(i => $cls('life-'+i).remove('lost'));
+  $cls('streak-badge').remove('visible');
+
+  const catInfo  = CATEGORIES[cat];
+  const diffInfo = DIFFICULTIES[state.difficulty];
+  const cp = document.getElementById('cat-pill');
+  const dp = document.getElementById('diff-pill');
+  cp.textContent = catInfo.icon + ' ' + catInfo.label;
+  cp.style.cssText = `border-color:${catInfo.color};color:${catInfo.color}`;
+  dp.textContent = diffInfo.label;
+  dp.style.cssText = `border-color:${diffInfo.color};color:${diffInfo.color}`;
+
+  showScreen('quiz');
+  loadQuestion();
+}
+
+function goHome() {
+  clearInterval(state.timerInterval);
+  loadData();
+  updateHomeXP();
+  // Atualizar badge de desafios pendentes
+  const pending = getChallenges().filter(c => c.status === 'active').length;
+  const badge = $id('challenge-badge-count');
+  if (badge) { badge.style.display = pending ? 'inline' : 'none'; badge.textContent = pending; }
+  showScreen('home');
+}
+
+// ── BANCO DE QUESTÕES ─────────────────────────────────
+const QUESTION_BANK = {
+  sequences: {
+    easy: [
+      { question:"Qual é o próximo número: 2, 4, 6, 8, ___?", options:["A) 9","B) 10","C) 11","D) 12"], answer:"B", steps:["Diferenças: +2, +2, +2 → PA de razão 2.","Próximo: <code>8 + 2 = 10</code>."], conclusion:"Resposta: 10" },
+      { question:"Complete: 1, 4, 9, 16, ___", options:["A) 20","B) 24","C) 25","D) 36"], answer:"C", steps:["1=1², 4=2², 9=3², 16=4² → quadrados perfeitos.","Próximo: <code>5² = 25</code>."], conclusion:"Resposta: 25" },
+      { question:"Próximo número: 100, 90, 80, 70, ___?", options:["A) 65","B) 60","C) 55","D) 50"], answer:"B", steps:["Diferenças: -10 constante → PA decrescente.","Próximo: <code>70 - 10 = 60</code>."], conclusion:"Resposta: 60" },
+      { question:"Continue: 1, 1, 2, 3, 5, 8, ___", options:["A) 10","B) 11","C) 13","D) 16"], answer:"C", steps:["Cada termo = soma dos dois anteriores (Fibonacci).","Próximo: <code>5 + 8 = 13</code>."], conclusion:"Resposta: 13" },
+      { question:"Próximo da série: 3, 6, 9, 12, ___?", options:["A) 14","B) 15","C) 16","D) 18"], answer:"B", steps:["Múltiplos de 3. Próximo: <code>3 × 5 = 15</code>."], conclusion:"Resposta: 15" },
+      { question:"Complete: 2, 4, 8, 16, ___", options:["A) 24","B) 28","C) 32","D) 36"], answer:"C", steps:["PG de razão 2. Próximo: <code>16 × 2 = 32</code>."], conclusion:"Resposta: 32" },
+      { question:"Próximo: 50, 45, 40, 35, ___?", options:["A) 25","B) 28","C) 30","D) 32"], answer:"C", steps:["PA de razão -5. Próximo: <code>35 - 5 = 30</code>."], conclusion:"Resposta: 30" },
+      { question:"Qual é o próximo: 5, 10, 15, 20, ___?", options:["A) 22","B) 24","C) 25","D) 30"], answer:"C", steps:["Múltiplos de 5. Próximo: <code>5 × 5 = 25</code>."], conclusion:"Resposta: 25" },
+      { question:"Complete: 1, 8, 27, 64, ___", options:["A) 100","B) 120","C) 125","D) 216"], answer:"C", steps:["1=1³, 8=2³, 27=3³, 64=4³ → cubos perfeitos.","Próximo: <code>5³ = 125</code>."], conclusion:"Resposta: 125" },
+      { question:"Próximo número: 0, 5, 10, 15, ___?", options:["A) 18","B) 20","C) 22","D) 25"], answer:"B", steps:["PA de razão +5. Próximo: <code>15 + 5 = 20</code>."], conclusion:"Resposta: 20" },
+      { question:"Qual vem depois: 2, 6, 18, 54, ___?", options:["A) 108","B) 144","C) 162","D) 180"], answer:"C", steps:["PG de razão 3. Próximo: <code>54 × 3 = 162</code>."], conclusion:"Resposta: 162" },
+      { question:"Complete a série: 1, 3, 5, 7, ___", options:["A) 8","B) 9","C) 10","D) 11"], answer:"B", steps:["Números ímpares consecutivos. Próximo: <code>9</code>."], conclusion:"Resposta: 9" },
+      { question:"Próximo: 10, 20, 30, 40, ___?", options:["A) 45","B) 48","C) 50","D) 55"], answer:"C", steps:["PA de razão +10. Próximo: <code>40 + 10 = 50</code>."], conclusion:"Resposta: 50" },
+      { question:"Qual é o próximo: 32, 16, 8, 4, ___?", options:["A) 1","B) 2","C) 3","D) 4"], answer:"B", steps:["PG de razão 1/2 (÷2). Próximo: <code>4 ÷ 2 = 2</code>."], conclusion:"Resposta: 2" },
+      { question:"Continue: 0, 1, 4, 9, 16, ___", options:["A) 20","B) 24","C) 25","D) 36"], answer:"C", steps:["0²,1²,2²,3²,4² → quadrados de 0 a 4.","Próximo: <code>5² = 25</code>."], conclusion:"Resposta: 25" },
+    ],
+    medium: [
+      { question:"Próximo: 2, 3, 5, 8, 12, 17, ___?", options:["A) 21","B) 22","C) 23","D) 24"], answer:"C", steps:["Diferenças: 1,2,3,4,5 → crescem +1.","Próxima diferença: 6. Resultado: <code>17+6=23</code>."], conclusion:"Resposta: 23" },
+      { question:"Complete: 1, 2, 6, 24, ___", options:["A) 48","B) 96","C) 120","D) 144"], answer:"C", steps:["1!=1, 2!=2, 3!=6, 4!=24 → fatoriais.","Próximo: <code>5!=120</code>."], conclusion:"Resposta: 120" },
+      { question:"Próximo: 3, 7, 13, 21, 31, ___", options:["A) 40","B) 43","C) 45","D) 47"], answer:"B", steps:["Diferenças: 4,6,8,10 → PA razão +2.","Próxima diferença: 12. Resultado: <code>31+12=43</code>."], conclusion:"Resposta: 43" },
+      { question:"Qual vem a seguir: 729, 243, 81, 27, ___?", options:["A) 3","B) 6","C) 9","D) 12"], answer:"C", steps:["PG razão ÷3. 3⁶,3⁵,3⁴,3³.","Próximo: <code>3²=9</code>."], conclusion:"Resposta: 9" },
+      { question:"Próximo: 2, 5, 11, 23, 47, ___?", options:["A) 90","B) 94","C) 95","D) 96"], answer:"C", steps:["Regra: aₙ = aₙ₋₁ × 2 + 1.","Próximo: <code>47×2+1=95</code>."], conclusion:"Resposta: 95" },
+      { question:"Complete: 1, 3, 7, 15, 31, ___", options:["A) 47","B) 55","C) 63","D) 65"], answer:"C", steps:["Regra: aₙ = aₙ₋₁ × 2 + 1.","Próximo: <code>31×2+1=63</code>."], conclusion:"Resposta: 63" },
+      { question:"Próximo: 1, 4, 10, 20, 35, ___", options:["A) 50","B) 52","C) 54","D) 56"], answer:"D", steps:["Diferenças: 3,6,10,15 → crescem +1 a cada vez (números triangulares).","Próxima diferença: 21. Resultado: <code>35+21=56</code>."], conclusion:"Resposta: 56" },
+      { question:"Qual vem depois: 5, 11, 23, 47, 95, ___?", options:["A) 180","B) 190","C) 191","D) 200"], answer:"C", steps:["Regra: aₙ = aₙ₋₁ × 2 + 1.","Próximo: <code>95×2+1=191</code>."], conclusion:"Resposta: 191" },
+      { question:"Próximo: 1, 6, 15, 28, 45, ___", options:["A) 60","B) 62","C) 64","D) 66"], answer:"D", steps:["Diferenças: 5,9,13,17 → PA razão +4.","Próxima diferença: 21. Resultado: <code>45+21=66</code>."], conclusion:"Resposta: 66" },
+      { question:"Complete: 4, 6, 10, 16, 24, ___", options:["A) 30","B) 32","C) 34","D) 36"], answer:"C", steps:["Diferenças: 2,4,6,8 → PA razão +2.","Próxima diferença: 10. Resultado: <code>24+10=34</code>."], conclusion:"Resposta: 34" },
+      { question:"Próximo: 1, 5, 13, 29, 61, ___", options:["A) 120","B) 122","C) 125","D) 126"], answer:"C", steps:["Regra: aₙ = aₙ₋₁ × 2 + 3.","Próximo: <code>61×2+3=125</code>."], conclusion:"Resposta: 125" },
+      { question:"Qual é o próximo: 2, 3, 5, 7, 11, 13, ___?", options:["A) 15","B) 16","C) 17","D) 19"], answer:"C", steps:["São os números primos em ordem: 2,3,5,7,11,13.","O próximo primo é <code>17</code>."], conclusion:"Resposta: 17" },
+      { question:"Complete: 8, 4, 2, 1, 0.5, ___", options:["A) 0,1","B) 0,25","C) 0,3","D) 0,5"], answer:"B", steps:["PG de razão ÷2. Próximo: <code>0,5÷2=0,25</code>."], conclusion:"Resposta: 0,25" },
+      { question:"Próximo da série: 1, 2, 4, 8, 16, 32, ___?", options:["A) 48","B) 56","C) 64","D) 72"], answer:"C", steps:["PG de razão 2. Próximo: <code>32×2=64</code>."], conclusion:"Resposta: 64" },
+      { question:"Qual vem depois: 100, 95, 85, 70, 50, ___?", options:["A) 20","B) 25","C) 30","D) 35"], answer:"B", steps:["Diferenças: -5,-10,-15,-20 → PA razão -5.","Próxima diferença: -25. Resultado: <code>50-25=25</code>."], conclusion:"Resposta: 25" },
+    ],
+    hard: [
+      { question:"Determine o próximo: 2, 3, 10, 15, 26, 35, ___", options:["A) 48","B) 50","C) 52","D) 58"], answer:"B", steps:["Duas sequências alternadas.","Pares: 2,10,26 → difs 8,16 → próximo +24=50."], conclusion:"Resposta: 50" },
+      { question:"Próximo: 0, 1, 1, 2, 4, 7, 13, ___?", options:["A) 20","B) 22","C) 24","D) 26"], answer:"C", steps:["Tribonacci: soma dos três anteriores.","4+7+13=<code>24</code>."], conclusion:"Resposta: 24" },
+      { question:"Próximo: 6, 24, 60, 120, 210, ___", options:["A) 280","B) 310","C) 336","D) 360"], answer:"C", steps:["Padrão n×(n+1)×(n+2).","n=6: <code>6×7×8=336</code>."], conclusion:"Resposta: 336" },
+      { question:"Identifique: 1, 5, 14, 30, 55, ___", options:["A) 80","B) 91","C) 99","D) 110"], answer:"B", steps:["Diferenças: 4,9,16,25 → quadrados perfeitos.","Próxima: 6²=36. Resultado: <code>55+36=91</code>."], conclusion:"Resposta: 91" },
+      { question:"Complete: 1, 2, 4, 7, 11, 16, 22, ___", options:["A) 28","B) 29","C) 30","D) 32"], answer:"B", steps:["Diferenças: 1,2,3,4,5,6 → crescem +1.","Próxima: 7. Resultado: <code>22+7=29</code>."], conclusion:"Resposta: 29" },
+      { question:"Próximo: 1, 3, 6, 10, 15, 21, ___", options:["A) 26","B) 27","C) 28","D) 30"], answer:"C", steps:["Números triangulares: diferenças 2,3,4,5,6.","Próxima diferença: 7. Resultado: <code>21+7=28</code>."], conclusion:"Resposta: 28" },
+      { question:"Qual é o próximo: 1, 1, 2, 6, 24, 120, ___?", options:["A) 240","B) 480","C) 720","D) 960"], answer:"C", steps:["Fatoriais: 0!=1, 1!=1, 2!=2, 3!=6, 4!=24, 5!=120.","Próximo: <code>6!=720</code>."], conclusion:"Resposta: 720" },
+      { question:"Complete: 2, 5, 14, 41, 122, ___", options:["A) 350","B) 363","C) 365","D) 368"], answer:"C", steps:["Regra: aₙ = aₙ₋₁ × 3 - 1.","Próximo: <code>122×3-1=365</code>."], conclusion:"Resposta: 365" },
+      { question:"Próximo: 3, 5, 11, 29, 83, ___", options:["A) 240","B) 243","C) 245","D) 249"], answer:"D", steps:["Regra: aₙ = aₙ₋₁ × 3 - 4.","Próximo: <code>83×3-4=245</code>... Verificando: 5=3×3-4=5✓, 11=5×3-4=11✓, 29=11×3-4=29✓, 83=29×3-4=83✓.","<code>83×3-4=245</code>."], conclusion:"Resposta: 245" },
+      { question:"Identifique o próximo: 0, 1, 3, 6, 10, 15, 21, ___", options:["A) 26","B) 27","C) 28","D) 30"], answer:"C", steps:["Números triangulares T(n) = n(n+1)/2.","T(7)=28. Diferença atual: +7.","Próximo: <code>21+7=28</code>."], conclusion:"Resposta: 28" },
+    ],
+  },
+  matrices: {
+    easy: [
+      { question:"Grade 3×3: linha 1=1,2,3; linha 2=4,5,6; linha 3=7,8,___?", options:["A) 8","B) 9","C) 10","D) 11"], answer:"B", steps:["Números de 1 a 9 em ordem.","O 9º é <code>9</code>."], conclusion:"Resposta: 9" },
+      { question:"Grade 3×3, cada linha soma 15. Linha 3: 4, ___, 8.", options:["A) 2","B) 3","C) 4","D) 5"], answer:"B", steps:["4 + x + 8 = 15.","x = <code>3</code>."], conclusion:"Resposta: 3" },
+      { question:"Padrão: ○○○ / ○○✕ / ○✕✕. Próxima linha?", options:["A) ○✕✕","B) ✕✕✕","C) ✕○✕","D) ✕✕○"], answer:"B", steps:["Cada linha acrescenta +1 ✕.","Linha 4 tem 3 ✕: <code>✕✕✕</code>."], conclusion:"Resposta: ✕✕✕" },
+      { question:"Cada célula(i,j) = i × j. Valor em (3,3)?", options:["A) 6","B) 7","C) 8","D) 9"], answer:"D", steps:["Regra: i × j.","3 × 3 = <code>9</code>."], conclusion:"Resposta: 9" },
+      { question:"Grade: linha 1=1,4,7; linha 2=2,5,8; linha 3=3,6,___", options:["A) 7","B) 8","C) 9","D) 10"], answer:"C", steps:["Coluna 3: 7,8,? → aumenta +1 por linha.","Próximo: <code>9</code>."], conclusion:"Resposta: 9" },
+      { question:"Grade 2×2: 1,2 / 3,___. Cada linha soma 5.", options:["A) 1","B) 2","C) 3","D) 4"], answer:"B", steps:["Linha 2: 3 + x = 5.","x = <code>2</code>."], conclusion:"Resposta: 2" },
+      { question:"Cada linha tem o dobro da linha anterior. Linha 1=1. Linha 3=?", options:["A) 2","B) 3","C) 4","D) 8"], answer:"C", steps:["Linha 1=1, Linha 2=2, Linha 3=<code>4</code>."], conclusion:"Resposta: 4" },
+      { question:"Grade 3×3: diagonal principal = 1, 5, 9. Qual a soma?", options:["A) 13","B) 14","C) 15","D) 16"], answer:"C", steps:["1 + 5 + 9 = <code>15</code>."], conclusion:"Resposta: 15" },
+      { question:"Padrão: ▲▲▲ / ▲▲○ / ▲○○. Próxima linha?", options:["A) ▲○○","B) ○▲○","C) ○○○","D) ○○▲"], answer:"C", steps:["Cada linha troca mais um ▲ por ○.","Linha 4: todos ○ = <code>○○○</code>."], conclusion:"Resposta: ○○○" },
+      { question:"Grade onde célula = linha + coluna. Valor em (2,4)?", options:["A) 4","B) 5","C) 6","D) 8"], answer:"C", steps:["2 + 4 = <code>6</code>."], conclusion:"Resposta: 6" },
+      { question:"Grade 3×3: cada coluna tem a mesma soma. Coluna 1=1+4+7=12. Coluna 2=2+5+8=15. Coluna 3=3+6+x=12. x=?", options:["A) 1","B) 2","C) 3","D) 4"], answer:"C", steps:["3+6+x=12.","x=<code>3</code>."], conclusion:"Resposta: 3" },
+    ],
+    medium: [
+      { question:"Grade mágica: 4,9,2 / 3,5,7 / 8,1,___. Valor faltante?", options:["A) 4","B) 5","C) 6","D) 7"], answer:"C", steps:["Constante mágica: 4+9+2=15.","Linha 3: 8+1+x=15 → x=<code>6</code>."], conclusion:"Resposta: 6" },
+      { question:"Terceiro valor = primeiro + dobro do segundo. Linha: 3, 4, ___?", options:["A) 10","B) 11","C) 12","D) 14"], answer:"B", steps:["3 + 2×4 = 3+8 = <code>11</code>."], conclusion:"Resposta: 11" },
+      { question:"A={2,4,6,8}, B={3,6,9,12}. Elemento de A∩B?", options:["A) 4","B) 6","C) 8","D) 9"], answer:"B", steps:["A∩B: elementos em ambos.","Único: <code>6</code>."], conclusion:"Resposta: 6" },
+      { question:"A={1,2,3,4,5}, B={3,4,5,6,7}, C={5,6,7,8,9}. |A∪B∪C|=?", options:["A) 7","B) 8","C) 9","D) 10"], answer:"C", steps:["União: {1,2,3,4,5,6,7,8,9}.","Total: <code>9 elementos</code>."], conclusion:"Resposta: 9" },
+      { question:"Grade: linha 1=[1,2,4]; linha 2=[2,4,8]; linha 3=[4,8,___].", options:["A) 12","B) 14","C) 16","D) 18"], answer:"C", steps:["Cada célula = dobro da esquerda e dobro de cima.","8×2 = <code>16</code>."], conclusion:"Resposta: 16" },
+      { question:"Célula(i,j) = i² + j. Valor em (3,2)?", options:["A) 9","B) 10","C) 11","D) 12"], answer:"C", steps:["3² + 2 = 9 + 2 = <code>11</code>."], conclusion:"Resposta: 11" },
+      { question:"Numa grade 3×3, a soma de cada linha é diferente por +3. Linha 1 soma 6. Linha 3 soma?", options:["A) 9","B) 12","C) 15","D) 18"], answer:"B", steps:["Linha 1=6, Linha 2=9, Linha 3=<code>12</code>."], conclusion:"Resposta: 12" },
+      { question:"A={1,3,5,7}, B={3,5,7,9}. Quantos elementos em A∪B?", options:["A) 5","B) 6","C) 7","D) 8"], answer:"B", steps:["A∪B={1,3,5,7,9} = <code>5 elementos</code>... A={1,3,5,7}, B={3,5,7,9}, União={1,3,5,7,9} = 5.","Resposta: <code>5</code>."], conclusion:"Resposta: 5" },
+      { question:"Grade onde cada linha multiplica por 2 a da anterior. Linha 2 = [2,4,6]. Linha 1 = ?", options:["A) [1,2,3]","B) [1,2,4]","C) [2,4,6]","D) [4,8,12]"], answer:"A", steps:["Linha 2 = Linha 1 × 2.","Linha 1 = Linha 2 ÷ 2 = <code>[1,2,3]</code>."], conclusion:"Resposta: [1,2,3]" },
+      { question:"Num quadrado mágico 3×3, a constante é n(n²+1)/2. Para n=3, qual é?", options:["A) 12","B) 15","C) 18","D) 21"], answer:"B", steps:["3×(9+1)/2 = 3×10/2 = <code>15</code>."], conclusion:"Resposta: 15" },
+      { question:"|A|=10, |B|=8, |A∩B|=3. Qual é |A∪B|?", options:["A) 13","B) 15","C) 17","D) 21"], answer:"B", steps:["10+8-3 = <code>15</code>."], conclusion:"Resposta: 15" },
+    ],
+    hard: [
+      { question:"|A∩B|=5, |A|=12, |B|=10. Quanto tem |A∪B|?", options:["A) 15","B) 17","C) 20","D) 22"], answer:"B", steps:["12+10-5 = <code>17</code>."], conclusion:"Resposta: 17" },
+      { question:"Grade 4×4, célula(i,j)=i×j. Soma total?", options:["A) 80","B) 90","C) 100","D) 110"], answer:"C", steps:["(Σ1..4)² = 10² = <code>100</code>."], conclusion:"Resposta: 100" },
+      { question:"Constante mágica de quadrado n=4: n(n²+1)/2?", options:["A) 30","B) 34","C) 36","D) 40"], answer:"B", steps:["4×(16+1)/2 = 4×17/2 = <code>34</code>."], conclusion:"Resposta: 34" },
+      { question:"A,B,C conjuntos. |A|=|B|=|C|=10, |A∩B|=|B∩C|=|A∩C|=4, |A∩B∩C|=2. |A∪B∪C|=?", options:["A) 18","B) 20","C) 22","D) 24"], answer:"B", steps:["Inclusão-Exclusão: 10+10+10-4-4-4+2 = <code>20</code>."], conclusion:"Resposta: 20" },
+      { question:"Numa grade, célula(i,j) = (i+j)². Valor em (2,3)?", options:["A) 20","B) 24","C) 25","D) 30"], answer:"C", steps:["(2+3)² = 5² = <code>25</code>."], conclusion:"Resposta: 25" },
+      { question:"Quadrado mágico 4×4: soma das diagonais = constante mágica = 34. Diagonal tem 4,11,6,___. Qual é o valor?", options:["A) 10","B) 12","C) 13","D) 15"], answer:"C", steps:["4+11+6+x=34.","x = <code>13</code>."], conclusion:"Resposta: 13" },
+      { question:"A={pares de 1-10}, B={múltiplos de 3 de 1-10}. |A∩B|=?", options:["A) 1","B) 2","C) 3","D) 4"], answer:"A", steps:["A={2,4,6,8,10}, B={3,6,9}.","A∩B={6} → <code>1 elemento</code>."], conclusion:"Resposta: 1" },
+      { question:"Grade 3×3 onde célula(i,j) = i³ - j. Valor em (2,3)?", options:["A) 2","B) 4","C) 5","D) 8"], answer:"C", steps:["2³ - 3 = 8 - 3 = <code>5</code>."], conclusion:"Resposta: 5" },
+    ],
+  },
+  propositional: [
+    { question:"Todo A é B e todo B é C. O que é necessariamente verdadeiro?", options:["A) Todo C é A","B) Todo A é C","C) Algum C não é A","D) Nenhum A é C"], answer:"B", steps:["Transitividade: A→B e B→C implica <code>A→C</code>."], conclusion:"Resposta: Todo A é C" },
+    { question:"'Se chove, o chão fica molhado.' O chão está molhado. Conclusão?", options:["A) Necessariamente choveu","B) Não choveu","C) Pode ter chovido, mas não é certo","D) O chão sempre fica molhado"], answer:"C", steps:["Afirmar o consequente é falácia.","Contra-exemplo: mangueira molha o chão sem chuva."], conclusion:"Resposta: pode ter chovido, mas não é certo" },
+    { question:"P→Q é verdadeiro. Q é falso. O que se conclui sobre P?", options:["A) P é verdadeiro","B) P é falso","C) P pode ser V ou F","D) P→Q se torna falso"], answer:"B", steps:["<code>Modus Tollens</code>: P→Q e ¬Q implica ¬P."], conclusion:"Resposta: P é falso" },
+    { question:"Se P→Q e Q→R, então:", options:["A) R→P","B) P→R","C) ¬P→¬R","D) R→Q"], answer:"B", steps:["Silogismo hipotético: P→Q e Q→R garantem <code>P→R</code>."], conclusion:"Resposta: P→R" },
+    { question:"'Se não estudo, reprovo. Não reprovei.' Conclusão?", options:["A) Estudei","B) Não estudei","C) Talvez tenha estudado","D) Nada se conclui"], answer:"A", steps:["Contraposição: ¬reprovo → <code>estudei</code>."], conclusion:"Resposta: Estudei" },
+    { question:"¬(P ∧ Q) é equivalente a:", options:["A) ¬P ∧ ¬Q","B) ¬P ∨ ¬Q","C) P ∨ Q","D) P ∧ ¬Q"], answer:"B", steps:["<code>Lei de De Morgan</code>: ¬(A∧B) = ¬A ∨ ¬B."], conclusion:"Resposta: ¬P ∨ ¬Q" },
+    { question:"P ∨ Q é verdadeiro e P é falso. O que se conclui?", options:["A) Q é falso","B) Q é verdadeiro","C) P é verdadeiro","D) Nada se conclui"], answer:"B", steps:["<code>Silogismo disjuntivo</code>: P∨Q e ¬P implica Q."], conclusion:"Resposta: Q é verdadeiro" },
+    { question:"'O projeto foi aprovado → há investimento. Investimento → empresa cresce. Projeto aprovado.' Logo:", options:["A) Empresa não cresce","B) Não há investimento","C) Empresa cresce","D) Projeto não aprovado"], answer:"C", steps:["Cadeia: aprovado→investimento→cresce.","<code>Modus Ponens</code>: empresa cresce."], conclusion:"Resposta: A empresa cresce" },
+    { question:"'Toda pessoa honesta diz a verdade. João não diz a verdade.' Logo:", options:["A) João é honesto","B) João não é honesto","C) Nem toda honesta diz verdade","D) João às vezes é honesto"], answer:"B", steps:["Modus Tollens: honesto→verdade, ¬verdade → <code>¬honesto</code>."], conclusion:"Resposta: João não é honesto" },
+    { question:"'Alguns políticos são honestos' é compatível com qual outra afirmação?", options:["A) Todos são desonestos","B) Nenhum é honesto","C) A maioria é desonesta","D) Todo honesto é político"], answer:"C", steps:["'Alguns' exige ao menos 1. A maioria desonesta ainda permite <code>alguns honestos</code>."], conclusion:"Resposta: A maioria é desonesta" },
+    { question:"¬(P ∨ Q) é equivalente a:", options:["A) ¬P ∨ ¬Q","B) ¬P ∧ ¬Q","C) P ∧ Q","D) P ∨ ¬Q"], answer:"B", steps:["De Morgan: ¬(A∨B) = <code>¬A ∧ ¬B</code>."], conclusion:"Resposta: ¬P ∧ ¬Q" },
+    { question:"'Todos os mamíferos têm coração. Baleia é mamífero.' Logo:", options:["A) Baleia não tem coração","B) Baleia tem coração","C) Coração é exclusivo de mamíferos","D) Nada se conclui"], answer:"B", steps:["Modus Ponens: mamífero→coração e baleia é mamífero → <code>baleia tem coração</code>."], conclusion:"Resposta: Baleia tem coração" },
+    { question:"Se P é verdadeiro e P→Q, então:", options:["A) Q é falso","B) Q pode ser V ou F","C) Q é verdadeiro","D) P→Q é falso"], answer:"C", steps:["<code>Modus Ponens</code>: P e P→Q implica Q=verdadeiro."], conclusion:"Resposta: Q é verdadeiro" },
+    { question:"(P→Q) ∧ (Q→P) significa:", options:["A) P e Q são opostos","B) P e Q são equivalentes","C) P implica Q apenas","D) Nenhuma relação"], answer:"B", steps:["P→Q e Q→P juntos formam <code>bicondicional P↔Q</code> (P e Q equivalentes)."], conclusion:"Resposta: P e Q são equivalentes" },
+    { question:"'Nenhum réptil é mamífero. Rex é réptil.' Logo:", options:["A) Rex é mamífero","B) Rex pode ser mamífero","C) Rex não é mamífero","D) Nada se conclui"], answer:"C", steps:["Réptil∩Mamífero=∅. Rex é réptil → <code>Rex não é mamífero</code>."], conclusion:"Resposta: Rex não é mamífero" },
+    { question:"Se ¬P→Q e ¬Q, o que se conclui?", options:["A) P é falso","B) P é verdadeiro","C) Q é verdadeiro","D) Nada se conclui"], answer:"B", steps:["¬P→Q e ¬Q: Modus Tollens → <code>¬(¬P) = P</code> é verdadeiro."], conclusion:"Resposta: P é verdadeiro" },
+  ],
+  probability: {
+    easy: [
+      { question:"Urna: 3 vermelhas e 7 azuis. P(vermelha)?", options:["A) 3/7","B) 3/10","C) 7/10","D) 1/3"], answer:"B", steps:["P = 3/10 = <code>30%</code>."], conclusion:"Resposta: 3/10" },
+      { question:"Dado de 6 faces. P(número par)?", options:["A) 1/3","B) 1/2","C) 2/3","D) 1/6"], answer:"B", steps:["Pares: {2,4,6} = 3/6 = <code>1/2</code>."], conclusion:"Resposta: 1/2" },
+      { question:"10 pessoas, 4 usam óculos. P(sorteada usa óculos)?", options:["A) 2/5","B) 1/4","C) 3/5","D) 1/2"], answer:"A", steps:["4/10 = <code>2/5</code>."], conclusion:"Resposta: 2/5" },
+      { question:"Uma moeda é lançada. P(cara)?", options:["A) 1/4","B) 1/3","C) 1/2","D) 2/3"], answer:"C", steps:["Espaço amostral: {cara, coroa}. P = <code>1/2</code>."], conclusion:"Resposta: 1/2" },
+      { question:"Baralho de 52 cartas. P(tirar um ás)?", options:["A) 1/13","B) 1/12","C) 1/4","D) 4/52"], answer:"A", steps:["4 ases em 52 cartas. P = 4/52 = <code>1/13</code>."], conclusion:"Resposta: 1/13" },
+      { question:"Saco com 5 bolas: 2 brancas, 3 pretas. P(branca)?", options:["A) 1/5","B) 2/5","C) 3/5","D) 1/2"], answer:"B", steps:["P = 2/5 = <code>40%</code>."], conclusion:"Resposta: 2/5" },
+      { question:"Dado de 6 faces. P(sair 6)?", options:["A) 1/2","B) 1/4","C) 1/6","D) 1/3"], answer:"C", steps:["1 resultado favorável em 6. P = <code>1/6</code>."], conclusion:"Resposta: 1/6" },
+      { question:"Turma de 20: 8 meninas. P(sorteado ser menina)?", options:["A) 2/5","B) 8/10","C) 3/5","D) 1/2"], answer:"A", steps:["8/20 = <code>2/5 = 40%</code>."], conclusion:"Resposta: 2/5" },
+      { question:"Dado: P(número menor que 3)?", options:["A) 1/6","B) 1/3","C) 1/2","D) 2/3"], answer:"B", steps:["Favoráveis: {1,2} = 2/6 = <code>1/3</code>."], conclusion:"Resposta: 1/3" },
+      { question:"Baralho de 52. P(carta de copas)?", options:["A) 1/13","B) 1/4","C) 1/2","D) 4/13"], answer:"B", steps:["13 copas em 52 cartas. P = 13/52 = <code>1/4</code>."], conclusion:"Resposta: 1/4" },
+    ],
+    medium: [
+      { question:"De quantas formas 4 pessoas sentam em 4 cadeiras distintas?", options:["A) 12","B) 16","C) 24","D) 32"], answer:"C", steps:["4! = <code>24</code>."], conclusion:"Resposta: 24" },
+      { question:"Time de 3 escolhido de 6. Quantas formas?", options:["A) 15","B) 18","C) 20","D) 24"], answer:"C", steps:["C(6,3) = <code>20</code>."], conclusion:"Resposta: 20" },
+      { question:"Dois dados. P(soma=7)?", options:["A) 1/9","B) 5/36","C) 1/6","D) 7/36"], answer:"C", steps:["6 pares somam 7 em 36 totais. P = <code>1/6</code>."], conclusion:"Resposta: 1/6" },
+      { question:"30 alunos: 18 gostam de mat., 12 de port., 6 de ambos. Quantos não gostam de nenhum?", options:["A) 4","B) 5","C) 6","D) 7"], answer:"C", steps:["18+12-6=24 gostam de ao menos um. 30-24=<code>6</code>."], conclusion:"Resposta: 6" },
+      { question:"Senha de 3 dígitos distintos de 1-9. Quantas senhas?", options:["A) 504","B) 512","C) 648","D) 729"], answer:"A", steps:["A(9,3) = 9×8×7 = <code>504</code>."], conclusion:"Resposta: 504" },
+      { question:"Dois dados. P(soma par)?", options:["A) 1/3","B) 5/12","C) 1/2","D) 2/3"], answer:"C", steps:["Par+Par ou Ímpar+Ímpar: 18 pares em 36. P = <code>1/2</code>."], conclusion:"Resposta: 1/2" },
+      { question:"C(8,3) = ?", options:["A) 40","B) 52","C) 56","D) 64"], answer:"C", steps:["8!/(3!×5!) = 336/6 = <code>56</code>."], conclusion:"Resposta: 56" },
+      { question:"Comitê de 2 de 5 pessoas. Quantas formas?", options:["A) 8","B) 10","C) 12","D) 20"], answer:"B", steps:["C(5,2) = 5!/(2!×3!) = <code>10</code>."], conclusion:"Resposta: 10" },
+      { question:"P(A)=0,3. P(complementar de A)?", options:["A) 0,3","B) 0,5","C) 0,7","D) 1,3"], answer:"C", steps:["P(Aᶜ) = 1 - P(A) = 1 - 0,3 = <code>0,7</code>."], conclusion:"Resposta: 0,7" },
+      { question:"Dois eventos mutuamente exclusivos: P(A)=0,4, P(B)=0,3. P(A∪B)?", options:["A) 0,12","B) 0,58","C) 0,70","D) 1,0"], answer:"C", steps:["Exclusivos: P(A∪B)=P(A)+P(B) = 0,4+0,3 = <code>0,7</code>."], conclusion:"Resposta: 0,7" },
+    ],
+    hard: [
+      { question:"6 bolas: 3 vermelhas e 3 azuis. Retira-se 2 sem reposição. P(mesma cor)?", options:["A) 1/3","B) 2/5","C) 1/2","D) 2/3"], answer:"B", steps:["C(6,2)=15. Favoráveis: C(3,2)+C(3,2)=6. P=<code>2/5</code>."], conclusion:"Resposta: 2/5" },
+      { question:"P(A)=0,4, P(B)=0,3, independentes. P(A∪B)?", options:["A) 0,58","B) 0,60","C) 0,65","D) 0,70"], answer:"A", steps:["P(A∩B)=0,4×0,3=0,12. P(A∪B)=0,4+0,3-0,12=<code>0,58</code>."], conclusion:"Resposta: 0,58" },
+      { question:"10 questões, 4 alternativas cada. P(acertar exatamente 0 ao acaso)?", options:["A) (3/4)^10","B) (1/4)^10","C) 1-(3/4)^10","D) 1-(1/4)^10"], answer:"A", steps:["P(errar uma)=3/4. P(errar todas)=<code>(3/4)^10</code>."], conclusion:"Resposta: (3/4)^10" },
+      { question:"23 pessoas. P(ao menos 2 fazem aniversário no mesmo dia)?", options:["A) <25%","B) ~50%","C) >75%","D) ~100%"], answer:"B", steps:["Paradoxo do aniversário: com 23 pessoas ≈ <code>50,7%</code>."], conclusion:"Resposta: ~50%" },
+      { question:"5 homens e 4 mulheres. Comitê de 3 com ao menos 1 mulher. Quantas formas?", options:["A) 70","B) 74","C) 80","D) 84"], answer:"B", steps:["C(9,3)-C(5,3) = 84-10 = <code>74</code>."], conclusion:"Resposta: 74" },
+      { question:"P(A|B)=0,6, P(B)=0,5. P(A∩B)?", options:["A) 0,1","B) 0,2","C) 0,3","D) 0,6"], answer:"C", steps:["P(A∩B)=P(A|B)×P(B)=0,6×0,5=<code>0,3</code>."], conclusion:"Resposta: 0,3" },
+      { question:"Lançam-se 3 moedas. P(exatamente 2 caras)?", options:["A) 1/4","B) 3/8","C) 1/2","D) 3/4"], answer:"B", steps:["C(3,2)×(1/2)³ = 3×1/8 = <code>3/8</code>."], conclusion:"Resposta: 3/8" },
+      { question:"Urna A: 3V,2A. Urna B: 1V,4A. Sorteia-se uma urna (50%) e uma bola. P(vermelha)?", options:["A) 0,30","B) 0,35","C) 0,40","D) 0,45"], answer:"C", steps:["P=0,5×3/5 + 0,5×1/5 = 0,3+0,1 = <code>0,4</code>."], conclusion:"Resposta: 0,4" },
+      { question:"Permutações da palavra 'ANA'?", options:["A) 2","B) 3","C) 4","D) 6"], answer:"B", steps:["3!/2! = 6/2 = <code>3</code> (dois As iguais)."], conclusion:"Resposta: 3" },
+      { question:"P(A)=0,5, P(B|A)=0,4. P(A∩B)?", options:["A) 0,1","B) 0,2","C) 0,3","D) 0,4"], answer:"B", steps:["P(A∩B)=P(B|A)×P(A)=0,4×0,5=<code>0,2</code>."], conclusion:"Resposta: 0,2" },
+    ],
+  },
+};
+// Pool por sessão (evita repetição)
+const usedQuestions = {};
+
+function getQuestion(cat, diff) {
+  const key = cat + '_' + diff;
+  if (!usedQuestions[key]) usedQuestions[key] = [];
+
+  let pool;
+  if (cat === 'propositional') {
+    pool = QUESTION_BANK.propositional;
+  } else {
+    pool = QUESTION_BANK[cat][diff] || QUESTION_BANK[cat]['medium'] || [];
+  }
+
+  // Filtrar já usadas; se todas usadas, resetar
+  let available = pool.filter((_, i) => !usedQuestions[key].includes(i));
+  if (available.length === 0) { usedQuestions[key] = []; available = pool; }
+
+  const idx = Math.floor(Math.random() * available.length);
+  const globalIdx = pool.indexOf(available[idx]);
+  usedQuestions[key].push(globalIdx);
+  return available[idx];
+}
+
+function loadQuestion() {
+  clearInterval(state.timerInterval);
+  state.answered = false; state.selectedOption = null;
+  state.questionCount++;
+  $set('q-counter','textContent','#' + state.questionCount);
+  $cls('next-btn').remove('visible');
+  $set('quiz-xp','textContent',state.xp + ' XP');
+
+  const diff = state.category === 'propositional' ? 'medium' : state.difficulty;
+  state.question = getQuestion(state.category, diff);
+  renderQuestion();
+  startTimer();
+}
+
+// ── RENDER ────────────────────────────────────────────
+function renderQuestion() {
+  const q = state.question;
+  let html = `<div class="q-text">${q.question}</div><div class="options-list">`;
+  q.options.forEach(opt => {
+    const letter = opt.charAt(0);
+    html += `<button class="opt-btn" id="opt-${letter}" onclick="handleAnswer('${opt}')">
+      <span class="opt-letter">${letter}</span>
+      <span>${escHtml(opt.slice(3))}</span>
+    </button>`;
+  });
+  html += '</div><div id="explanation-box"></div>';
+  $set('question-area','innerHTML',html);
+}
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── TIMER ─────────────────────────────────────────────
+function startTimer() {
+  const cfg = DIFFICULTIES[state.difficulty];
+  state.timeLeft = cfg.time;
+  updateTimerUI();
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    updateTimerUI();
+    if (state.timeLeft <= 0) { clearInterval(state.timerInterval); handleTimeout(); }
+  }, 1000);
+}
+function updateTimerUI() {
+  const cfg = DIFFICULTIES[state.difficulty];
+  const pct = state.timeLeft / cfg.time;
+  const color = pct > 0.6 ? '#00F5C4' : pct > 0.3 ? '#FFD166' : '#FF4D6D';
+  const tv = $id('timer-val');
+  const tf = $id('timer-fill');
+  tv.textContent = state.timeLeft + 's';
+  tv.style.color = color;
+  if(tv) tv.classList.toggle('pulse', pct <= 0.3);
+  tf.style.width = (pct*100) + '%';
+  tf.style.background = color;
+  tf.style.boxShadow = `0 0 8px ${color}88`;
+}
+
+// ── RESPOSTA ──────────────────────────────────────────
+function handleAnswer(opt) {
+  if (state.answered) return;
+  clearInterval(state.timerInterval);
+  state.selectedOption = opt;
+  state.answered = true;
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+
+  const letter = opt.charAt(0);
+  const correct = letter === state.question.answer;
+
+  ($id('opt-'+letter)||{classList:{add:()=>{}}}).classList.add(correct ? 'correct' : 'wrong');
+  if (!correct) ($id('opt-'+state.question.answer)||{classList:{add:()=>{}}}).classList.add('correct');
+
+  if (correct) {
+    const cfg = DIFFICULTIES[state.difficulty];
+    const timeBonus   = Math.floor((state.timeLeft / cfg.time) * 10);
+    const streakBonus = state.streak >= 3 ? Math.floor(cfg.xp * 0.5) : 0;
+    const earned = cfg.xp + timeBonus + streakBonus;
+    state.xp += earned; state.streak++;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+    state.sessionXp += earned; state.sessionCorrect++;
+    showXpFloat(earned);
+  } else {
+    state.streak = 0; state.lives--;
+    state.sessionWrong++;
+    updateLives();
+  }
+  state.sessionTotal++;
+  updateStreakBadge();
+  showExplanation(correct ? 'correct' : 'wrong');
+  $cls('next-btn').add('visible');
+  if (state.lives <= 0) setTimeout(showGameOver, 1700);
+}
+
+function handleTimeout() {
+  if (state.answered) return;
+  state.answered = true;
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+  const cb = document.getElementById('opt-'+state.question.answer);
+  if (cb) cb.classList.add('correct');
+  state.streak = 0; state.lives--;
+  state.sessionWrong++; state.sessionTotal++;
+  updateLives(); updateStreakBadge();
+  showExplanation('timeout');
+  $cls('next-btn').add('visible');
+  if (state.lives <= 0) setTimeout(showGameOver, 1700);
+}
+
+function nextQuestion() { loadQuestion(); }
+
+// ── UI HELPERS ────────────────────────────────────────
+function updateLives() {
+  [1,2,3].forEach(i => $cls('life-'+i).toggle('lost', i > state.lives));
+}
+function updateStreakBadge() {
+  const badge = document.getElementById('streak-badge');
+  $set('streak-num','textContent',state.streak);
+  badge.classList.toggle('visible', state.streak >= 2);
+}
+function showXpFloat(val) {
+  const el = document.createElement('div');
+  el.className = 'xp-float';
+  el.textContent = '+' + val + ' XP';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1300);
+}
+
+function buildExplHTML(q, type) {
+  const correct = type === 'correct';
+  const timeout = type === 'timeout';
+  const borderColor = correct ? 'var(--cyan)' : timeout ? 'var(--yellow)' : 'var(--red)';
+  const headerBg    = correct ? 'color-mix(in srgb,var(--cyan) 10%,transparent)' : timeout ? 'color-mix(in srgb,var(--yellow) 10%,transparent)' : 'color-mix(in srgb,var(--red) 10%,transparent)';
+  const icon  = correct ? '✓' : timeout ? '⏱' : '✗';
+  const label = correct ? 'Correto!' : timeout ? 'Tempo esgotado!' : 'Incorreto';
+
+  // Resposta correta destacada
+  const correctOpt = (q.options||[]).find(o => o.charAt(0) === q.answer) || '';
+  const correctText = correctOpt ? correctOpt.slice(3) : '';
+
+  // Passos numerados
+  const stepsHtml = (q.steps||[]).map((s,i) => `
+    <div class="expl-step">
+      <span class="step-num">${i+1}</span>
+      <span class="step-text">${s}</span>
+    </div>`).join('');
+
+  const conclusionHtml = q.conclusion
+    ? `<div class="expl-answer${correct?'':' wrong-ans'}">✦ ${escHtml(q.conclusion)}</div>` : '';
+
+  return `<div class="explanation${correct?'':timeout?' timeout':' wrong'}" style="border-left-color:${borderColor}">
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${headerBg};border-radius:8px;margin-bottom:14px">
+      <span style="font-size:20px;font-family:'Space Grotesk',sans-serif;font-weight:800;color:${borderColor}">${icon}</span>
+      <div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:${borderColor}">${label}</div>
+        ${!correct && correctText ? `<div style="font-size:12px;color:var(--muted);margin-top:2px">Resposta certa: <strong style="color:var(--cyan)">${escHtml(correctText)}</strong></div>` : ''}
+      </div>
+    </div>
+    <div class="how-label">RACIOCÍNIO PASSO A PASSO</div>
+    <div class="expl-steps">${stepsHtml}</div>
+    ${conclusionHtml}
+  </div>`;
+}
+
+function showExplanation(type) {
+  ($id('explanation-box')||{}).innerHTML = buildExplHTML(state.question, type);
+}
+
+
+// ── ANIMAÇÕES DE RESULTADO ─────────────────────────────
+function animateCount(id, from, to, duration) {
+  const el = $id(id);
+  if (!el) return;
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(from + (to - from) * ease);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function launchConfetti() {
+  const canvas = $id('cr-confetti');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#6C63FF','#00F5C4','#FFD166','#FF4D6D','#A78BFA','#00C6FF'];
+  const pieces = Array.from({length: 120}, () => ({
+    x: Math.random() * canvas.width,
+    y: -20 - Math.random() * 200,
+    w: 8 + Math.random() * 8,
+    h: 4 + Math.random() * 6,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    vx: (Math.random() - 0.5) * 4,
+    vy: 3 + Math.random() * 4,
+    rot: Math.random() * 360,
+    vrot: (Math.random() - 0.5) * 8,
+    opacity: 1,
+  }));
+
+  let frame;
+  let t = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    t++;
+    let alive = false;
+    for (const p of pieces) {
+      p.x   += p.vx;
+      p.y   += p.vy;
+      p.vy  += 0.06;   // gravidade
+      p.rot += p.vrot;
+      if (t > 90) p.opacity = Math.max(0, p.opacity - 0.012);
+      if (p.y < canvas.height + 20) alive = true;
+      ctx.save();
+      ctx.globalAlpha = p.opacity;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    }
+    if (alive && t < 300) frame = requestAnimationFrame(draw);
+    else { ctx.clearRect(0,0,canvas.width,canvas.height); }
+  }
+  frame = requestAnimationFrame(draw);
+}
+
+// ── GAME OVER ─────────────────────────────────────────
+function showGameOver() {
+  clearInterval(state.timerInterval);
+  saveHistory({ category:state.category, difficulty:state.difficulty, correct:state.sessionCorrect, total:state.sessionTotal, xp:state.sessionXp });
+  if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+  saveData();
+  $set('go-total','textContent',state.sessionTotal);
+  $set('go-correct','textContent',state.sessionCorrect);
+  $set('go-wrong','textContent',state.sessionWrong);
+  $set('go-streak','textContent','🔥' + state.bestStreak);
+  $set('go-xp','textContent','+' + state.sessionXp);
+  showScreen('gameover');
+}
+
+
+// ══════════════════════════════════════════════════════
+// PERSISTÊNCIA
+// ══════════════════════════════════════════════════════
+function saveData() {
+  localStorage.setItem('logiq-xp',        state.xp);
+  localStorage.setItem('logiq-bestStreak', state.bestStreak);
+  localStorage.setItem('logiq-history',    JSON.stringify(getHistory()));
+  localStorage.setItem('logiq-challenges', JSON.stringify(getChallenges()));
+}
+function loadData() {
+  state.xp         = parseInt(localStorage.getItem('logiq-xp') || '0');
+  state.bestStreak = parseInt(localStorage.getItem('logiq-bestStreak') || '0');
+}
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem('logiq-history') || '[]'); } catch { return []; }
+}
+function getChallenges() {
+  try { return JSON.parse(localStorage.getItem('logiq-challenges') || '[]'); } catch { return []; }
+}
+function saveHistory(entry) {
+  const h = getHistory();
+  h.unshift({ ...entry, date: Date.now() });
+  if (h.length > 100) h.splice(100);
+  localStorage.setItem('logiq-history', JSON.stringify(h));
+}
+function saveChallenge(ch) {
+  const list = getChallenges();
+  const idx = list.findIndex(c => c.id === ch.id);
+  if (idx >= 0) list[idx] = ch; else list.unshift(ch);
+  if (list.length > 50) list.splice(50);
+  localStorage.setItem('logiq-challenges', JSON.stringify(list));
+}
+
+// ══════════════════════════════════════════════════════
+// RANKING
+// ══════════════════════════════════════════════════════
+const FAKE_PLAYERS = [
+  { name:'Ana Lima',     xp:3840, color:'#FF6B6B' },
+  { name:'Pedro Costa',  xp:3210, color:'#4ECDC4' },
+  { name:'Julia Mendes', xp:2950, color:'#45B7D1' },
+  { name:'Carlos Brum',  xp:2480, color:'#96CEB4' },
+  { name:'Mariana Luz',  xp:2100, color:'#FFEAA7' },
+  { name:'Rafael Dias',  xp:1750, color:'#DDA0DD' },
+  { name:'Beatriz Neves',xp:1420, color:'#98D8C8' },
+  { name:'Lucas Ferro',  xp:1180, color:'#F7DC6F' },
+  { name:'Camila Rocha', xp: 860, color:'#BB8FCE' },
+  { name:'Diego Pinto',  xp: 540, color:'#85C1E9' },
+];
+const WEEK_PLAYERS = [
+  { name:'Julia Mendes', xp:480, color:'#45B7D1' },
+  { name:'Ana Lima',     xp:390, color:'#FF6B6B' },
+  { name:'Rafael Dias',  xp:310, color:'#DDA0DD' },
+  { name:'Carlos Brum',  xp:260, color:'#96CEB4' },
+  { name:'Pedro Costa',  xp:210, color:'#4ECDC4' },
+  { name:'Beatriz Neves',xp:190, color:'#98D8C8' },
+  { name:'Lucas Ferro',  xp:140, color:'#F7DC6F' },
+  { name:'Camila Rocha', xp:110, color:'#BB8FCE' },
+];
+const CAT_LEADERS = {
+  sequences:     [{ name:'Pedro Costa',  xp:1240, color:'#4ECDC4' },{ name:'Ana Lima',     xp:980, color:'#FF6B6B' },{ name:'Diego Pinto',  xp:720, color:'#85C1E9' }],
+  matrices:      [{ name:'Julia Mendes', xp:1100, color:'#45B7D1' },{ name:'Carlos Brum',  xp:870, color:'#96CEB4' },{ name:'Mariana Luz',  xp:640, color:'#FFEAA7' }],
+  propositional: [{ name:'Ana Lima',     xp:1380, color:'#FF6B6B' },{ name:'Rafael Dias',  xp:960, color:'#DDA0DD' },{ name:'Beatriz Neves',xp:710, color:'#98D8C8' }],
+  probability:   [{ name:'Mariana Luz',  xp:1020, color:'#FFEAA7' },{ name:'Lucas Ferro',  xp:790, color:'#F7DC6F' },{ name:'Camila Rocha', xp:560, color:'#BB8FCE' }],
+};
+
+let currentRankTab = 'global';
+
+function switchRankTab(tab) {
+  currentRankTab = tab;
+  document.querySelectorAll('.rank-tab').forEach((t,i) => {
+    t.classList.toggle('active', ['global','week','cat'][i] === tab);
+  });
+  renderRanking();
+}
+
+function renderRanking() {
+  const list = document.getElementById('ranking-list');
+  const myPos = document.getElementById('my-rank-pos');
+
+  if (currentRankTab === 'cat') {
+    // Por categoria — mostra mini-leaderboards
+    let html = '';
+    Object.entries(CAT_LEADERS).forEach(([catId, players]) => {
+      const cat = CATEGORIES[catId];
+      html += `<div style="margin-bottom:20px">
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--text);margin-bottom:8px">${cat.icon} ${cat.label}</div>`;
+      players.forEach((p, i) => {
+        const medal = ['🥇','🥈','🥉'][i];
+        html += rankRowHtml(p, i+1, medal, false);
+      });
+      html += '</div>';
+    });
+    list.innerHTML = html;
+    myPos.textContent = '—';
+    return;
+  }
+
+  const pool = currentRankTab === 'week' ? WEEK_PLAYERS : FAKE_PLAYERS;
+  const myXp = state.xp;
+  const myName = 'Você';
+
+  // Mescla jogador atual na lista
+  const all = [...pool, { name: myName, xp: myXp, color: '#6C63FF', isMe: true }];
+  all.sort((a,b) => b.xp - a.xp);
+  const myRank = all.findIndex(p => p.isMe) + 1;
+
+  list.innerHTML = all.map((p, i) => {
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
+    return rankRowHtml(p, i+1, medal, p.isMe);
+  }).join('');
+
+  myPos.textContent = '#' + myRank;
+}
+
+function rankRowHtml(p, pos, medal, isMe) {
+  const initial = (p.name||'?').charAt(0).toUpperCase();
+  const lvl = LEVEL_NAMES[getLevel(p.xp)];
+  const posColor = pos === 1 ? '#FFD700' : pos === 2 ? '#C0C0C0' : pos === 3 ? '#CD7F32' : 'var(--muted)';
+  return `<div class="rank-row${isMe?' me':''}">
+    <div class="rank-pos" style="color:${posColor}">${medal || '#'+pos}</div>
+    <div class="rank-avatar" style="background:${p.color}22;color:${p.color}">${initial}</div>
+    <div class="rank-info">
+      <div class="rank-name">${p.name}${isMe?' <span style="color:var(--violet);font-size:12px">(você)</span>':''}</div>
+      <div class="rank-level">${lvl}</div>
+    </div>
+    <div class="rank-xp">${p.xp} XP</div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+// DESAFIOS
+// ══════════════════════════════════════════════════════
+const RIVALS = [
+  { id:'bot1', name:'Ana Lima',     color:'#FF6B6B', skill:0.55, xpPerQ:18 },
+  { id:'bot2', name:'Carlos Brum',  color:'#4ECDC4', skill:0.70, xpPerQ:25 },
+  { id:'bot3', name:'Julia Mendes', color:'#45B7D1', skill:0.85, xpPerQ:35 },
+  { id:'bot4', name:'Pedro Costa',  color:'#F7DC6F', skill:0.40, xpPerQ:12 },
+];
+
+let newCh = { rival: null, category: 'sequences', difficulty: 'medium' };
+let activeCh = null;
+let cqState  = { lives:3, streak:0, myScore:0, rivalScore:0, total:0, correct:0, timer:null, timeLeft:0, answered:false, question:null };
+
+function openChallenges() {
+  renderChallenges();
+  showScreen('screen-challenges');
+}
+
+function renderChallenges() {
+  const list = getChallenges();
+  const el = document.getElementById('challenges-list');
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--muted);font-size:15px">Nenhum desafio ainda.<br>Crie um para começar!</div>';
+    return;
+  }
+  el.innerHTML = list.map(ch => challengeCardHtml(ch)).join('');
+
+  // Badge de pendentes na home
+  const pending = list.filter(c => c.status === 'active').length;
+  const badge = $id('challenge-badge-count');
+  if (badge) { badge.style.display = pending ? 'inline' : 'none'; badge.textContent = pending; }
+}
+
+function challengeCardHtml(ch) {
+  const rival = RIVALS.find(r => r.id === ch.rivalId) || { name:'Rival', color:'#888' };
+  const cat   = CATEGORIES[ch.category];
+  const diff  = DIFFICULTIES[ch.difficulty];
+  const done  = ch.status === 'done';
+  const active = ch.status === 'active';
+
+  let badgeCls = 'pending', badgeTxt = 'Aguardando';
+  let resultHtml = '';
+  let btnHtml = '';
+
+  if (active) {
+    badgeCls = 'active'; badgeTxt = 'Em andamento';
+    btnHtml = `<button class="challenge-btn" onclick="resumeChallenge('${ch.id}')">▶ Continuar desafio</button>`;
+  } else if (done) {
+    const win = ch.myScore > ch.rivalScore;
+    const draw = ch.myScore === ch.rivalScore;
+    badgeCls = draw ? 'draw' : win ? 'win' : 'lose';
+    badgeTxt = draw ? 'Empate' : win ? 'Vitória 🏆' : 'Derrota';
+    resultHtml = `<div class="challenge-scores">
+      <div class="score-box${ch.myScore >= ch.rivalScore && !draw?' winner':''}">
+        <div class="score-who">Você</div><div class="score-val">${ch.myScore}</div>
+      </div>
+      <div class="score-box${ch.rivalScore > ch.myScore?' winner':''}">
+        <div class="score-who">${rival.name}</div><div class="score-val">${ch.rivalScore}</div>
+      </div>
+    </div>`;
+  } else {
+    btnHtml = `<button class="challenge-btn" onclick="resumeChallenge('${ch.id}')">▶ Jogar agora</button>`;
+  }
+
+  return `<div class="challenge-card">
+    <div class="challenge-header">
+      <div class="challenge-rival">
+        <div class="rival-avatar" style="background:${rival.color}22;color:${rival.color}">${rival.name.charAt(0)}</div>
+        <div><div class="rival-name">${rival.name}</div><div class="rival-level">${cat.icon} ${cat.label} · ${diff.label}</div></div>
+      </div>
+      <span class="challenge-badge ${badgeCls}">${badgeTxt}</span>
+    </div>
+    <div class="challenge-meta">Criado em ${new Date(ch.date).toLocaleDateString('pt-BR')}</div>
+    ${resultHtml}
+    ${btnHtml}
+  </div>`;
+}
+
+function openNewChallenge() {
+  newCh = { rival: RIVALS[0].id, category: 'sequences', difficulty: 'medium' };
+
+  // Rival picker
+  ($id('rival-picker')||{}).innerHTML = RIVALS.map(r =>
+    `<button onclick="pickRival('${r.id}',this)" class="challenge-btn" style="background:${r.color}22;border:1.5px solid ${r.color};color:${r.color};font-size:13px;display:flex;align-items:center;gap:10px;text-align:left" id="rival-opt-${r.id}">
+      <span style="width:30px;height:30px;border-radius:50%;background:${r.color}33;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">${r.name.charAt(0)}</span>
+      <span style="flex:1">${r.name}</span>
+      <span style="font-size:11px;opacity:.7">${Math.round(r.skill*100)}% acerto</span>
+    </button>`
+  ).join('');
+
+  // Cat picker
+  ($id('cat-picker')||{}).innerHTML = Object.entries(CATEGORIES).map(([id,cat]) =>
+    `<button onclick="pickCat('${id}',this)" class="challenge-btn" style="background:${cat.color}18;border:1.5px solid ${cat.color};color:${cat.color};font-size:13px" id="ccat-${id}">${cat.icon} ${cat.label}</button>`
+  ).join('');
+
+  // Diff picker
+  ($id('diff-picker')||{}).innerHTML = Object.entries(DIFFICULTIES).map(([id,d]) =>
+    `<button onclick="pickDiff('${id}',this)" class="challenge-btn" style="flex:1;background:transparent;border:1.5px solid var(--border);color:var(--muted);font-size:13px" id="cdiff-${id}">${d.label}</button>`
+  ).join('');
+
+  // Defaults
+  document.getElementById('rival-opt-'+newCh.rival)?.click();
+  document.getElementById('ccat-'+newCh.category)?.click();
+  document.getElementById('cdiff-'+newCh.difficulty)?.click();
+
+  $cls('new-challenge-modal').add('open');
+}
+function closeNewChallenge() { $cls('new-challenge-modal').remove('open'); }
+
+function pickRival(id, btn) {
+  newCh.rival = id;
+  document.querySelectorAll('#rival-picker button').forEach(b => b.style.fontWeight = '600');
+  btn.style.fontWeight = '800';
+}
+function pickCat(id, btn) {
+  newCh.category = id;
+  document.querySelectorAll('#cat-picker button').forEach(b => { b.style.opacity='0.5'; });
+  btn.style.opacity = '1';
+}
+function pickDiff(id, btn) {
+  newCh.difficulty = id;
+  const d = DIFFICULTIES[id];
+  document.querySelectorAll('#diff-picker button').forEach(b => {
+    b.style.borderColor = 'var(--border)'; b.style.color = 'var(--muted)'; b.style.background = 'transparent';
+  });
+  btn.style.borderColor = d.color; btn.style.color = d.color; btn.style.background = d.color+'18';
+}
+
+function startChallenge() {
+  closeNewChallenge();
+  const rival = RIVALS.find(r => r.id === newCh.rival);
+  const ch = {
+    id: Date.now().toString(),
+    rivalId: newCh.rival,
+    category: newCh.category,
+    difficulty: newCh.difficulty,
+    status: 'pending',
+    myScore: 0, rivalScore: 0,
+    totalQ: 5, doneQ: 0,
+    date: Date.now(),
+  };
+  saveChallenge(ch);
+  activeCh = ch;
+  launchChallengeQuiz();
+}
+
+function resumeChallenge(id) {
+  const list = getChallenges();
+  activeCh = list.find(c => c.id === id);
+  if (!activeCh || activeCh.status === 'done') return;
+  activeCh.status = 'pending'; // reset para jogar
+  launchChallengeQuiz();
+}
+
+function launchChallengeQuiz() {
+  const rival = RIVALS.find(r => r.id === activeCh.rivalId);
+  const cat   = CATEGORIES[activeCh.category];
+  const diff  = DIFFICULTIES[activeCh.difficulty];
+
+  cqState = { lives:3, streak:0, myScore:0, rivalScore:0, total:0, correct:0, timer:null, timeLeft:0, answered:false, question:null };
+
+  // Setup pills
+  const cp = document.getElementById('cq-cat-pill');
+  const dp = document.getElementById('cq-diff-pill');
+  cp.textContent = cat.icon+' '+cat.label; cp.style.cssText = `border-color:${cat.color};color:${cat.color}`;
+  dp.textContent = diff.label; dp.style.cssText = `border-color:${diff.color};color:${diff.color}`;
+
+  // Rival bar
+  ($id('cq-rival-avatar')||{textContent:''}).textContent = rival.name.charAt(0);
+  ($id('cq-rival-avatar')||{style:{}}).style.background=rival.color+'22';
+  ($id('cq-rival-avatar')||{style:{}}).style.color=rival.color;
+  $set('cq-rival-name','textContent',rival.name);
+  ($id('cq-rival-fill')||{style:{}}).style.background=rival.color;
+
+  [1,2,3].forEach(i => $cls('cq-life-'+i).remove('lost'));
+  $cls('cq-streak-badge').remove('visible');
+  $cls('cq-next-btn').remove('visible');
+
+  showScreen('screen-challenge-quiz');
+  cqLoadQuestion();
+}
+
+function cqLoadQuestion() {
+  clearInterval(cqState.timer);
+  cqState.answered = false;
+  cqState.total++;
+  $set('cq-counter','textContent','#' + cqState.total);
+  $cls('cq-next-btn').remove('visible');
+  updateCqScoreDisplay();
+
+  const diff = activeCh.category === 'propositional' ? 'medium' : activeCh.difficulty;
+  cqState.question = getQuestion(activeCh.category, diff);
+  cqRenderQuestion();
+  cqStartTimer();
+}
+
+function cqRenderQuestion() {
+  const q = cqState.question;
+  let html = `<div class="q-text">${q.question}</div><div class="options-list">`;
+  q.options.forEach(opt => {
+    const letter = opt.charAt(0);
+    html += `<button class="opt-btn" id="cq-opt-${letter}" onclick="cqHandleAnswer('${opt}')">
+      <span class="opt-letter">${letter}</span><span>${escHtml(opt.slice(3))}</span>
+    </button>`;
+  });
+  html += '</div><div id="cq-explanation-box"></div>';
+  $set('cq-question-area','innerHTML',html);
+}
+
+function cqStartTimer() {
+  const cfg = DIFFICULTIES[activeCh.difficulty];
+  cqState.timeLeft = cfg.time;
+  cqUpdateTimerUI();
+  cqState.timer = setInterval(() => {
+    cqState.timeLeft--;
+    cqUpdateTimerUI();
+    if (cqState.timeLeft <= 0) { clearInterval(cqState.timer); cqHandleTimeout(); }
+  }, 1000);
+}
+
+function cqUpdateTimerUI() {
+  const cfg = DIFFICULTIES[activeCh.difficulty];
+  const pct = cqState.timeLeft / cfg.time;
+  const color = pct > 0.6 ? '#00F5C4' : pct > 0.3 ? '#FFD166' : '#FF4D6D';
+  const tv = $id('cq-timer-val');
+  const tf = $id('cq-timer-fill');
+  if(tv){tv.textContent=cqState.timeLeft+'s'; tv.style.color=color;}
+  if(tv) tv.classList.toggle('pulse', pct <= 0.3);
+  if(tf){tf.style.width=(pct*100)+'%'; tf.style.background=color;}
+}
+
+function cqHandleAnswer(opt) {
+  if (cqState.answered) return;
+  clearInterval(cqState.timer);
+  cqState.answered = true;
+  document.querySelectorAll('[id^="cq-opt-"]').forEach(b => b.disabled = true);
+
+  const letter = opt.charAt(0);
+  const correct = letter === cqState.question.answer;
+  ($id('cq-opt-'+letter)||{classList:{add:()=>{}}}).classList.add(correct ? 'correct' : 'wrong');
+  if (!correct) ($id('cq-opt-'+cqState.question.answer)||{classList:{add:()=>{}}}).classList.add('correct');
+
+  // Rival responde baseado em skill
+  const rival = RIVALS.find(r => r.id === activeCh.rivalId);
+  const rivalCorrect = Math.random() < rival.skill;
+
+  if (correct) {
+    cqState.myScore++;
+    cqState.correct++;
+    cqState.streak++;
+    $cls('cq-streak-badge').toggle('visible', cqState.streak >= 2);
+    $set('cq-streak-num','textContent',cqState.streak);
+  } else {
+    cqState.streak = 0;
+    cqState.lives--;
+    [1,2,3].forEach(i => $cls('cq-life-'+i).toggle('lost', i > cqState.lives));
+    $cls('cq-streak-badge').remove('visible');
+  }
+  if (rivalCorrect) cqState.rivalScore++;
+
+  // Rival progress bar
+  const pct = (cqState.rivalScore / activeCh.totalQ) * 100;
+  ($id('cq-rival-fill')||{style:{}}).style.width=pct + '%';
+  $set('cq-rival-score','textContent',cqState.rivalScore);
+  updateCqScoreDisplay();
+
+  cqShowExplanation(correct);
+  $cls('cq-next-btn').add('visible');
+
+  if (cqState.total >= activeCh.totalQ || cqState.lives <= 0) {
+    $set('cq-next-btn','textContent','Ver resultado →');
+    const _nb1=$id('cq-next-btn'); if(_nb1) _nb1.onclick=()=>finishChallenge();
+  }
+}
+
+function cqHandleTimeout() {
+  if (cqState.answered) return;
+  cqState.answered = true;
+  document.querySelectorAll('[id^="cq-opt-"]').forEach(b => b.disabled = true);
+  ($id('cq-opt-'+cqState.question.answer)||{classList:{add:()=>{}}}).classList.add('correct');
+  const rival = RIVALS.find(r => r.id === activeCh.rivalId);
+  if (Math.random() < rival.skill) { cqState.rivalScore++; $set('cq-rival-score','textContent',cqState.rivalScore); }
+  cqState.lives--;
+  [1,2,3].forEach(i => $cls('cq-life-'+i).toggle('lost', i > cqState.lives));
+  cqShowExplanation(false, true);
+  updateCqScoreDisplay();
+  $cls('cq-next-btn').add('visible');
+  if (cqState.total >= activeCh.totalQ || cqState.lives <= 0) {
+    $set('cq-next-btn','textContent','Ver resultado →');
+    const _nb1=$id('cq-next-btn'); if(_nb1) _nb1.onclick=()=>finishChallenge();
+  }
+}
+
+function cqNextQuestion() {
+  if (cqState.total >= activeCh.totalQ || cqState.lives <= 0) { finishChallenge(); return; }
+  $set('cq-next-btn','textContent','Próxima questão →');
+  const _nb2=$id('cq-next-btn'); if(_nb2) _nb2.onclick=cqNextQuestion;
+  cqLoadQuestion();
+}
+
+function cqShowExplanation(correct, timeout) {
+  const type = correct ? 'correct' : timeout ? 'timeout' : 'wrong';
+  ($id('cq-explanation-box')||{}).innerHTML = buildExplHTML(cqState.question, type);
+}
+
+function updateCqScoreDisplay() {
+  $set('cq-score-display','textContent',cqState.myScore + ' × ' + cqState.rivalScore);
+}
+
+function finishChallenge() {
+  clearInterval(cqState.timer);
+  const rival = RIVALS.find(r => r.id === activeCh.rivalId);
+  const win  = cqState.myScore > cqState.rivalScore;
+  const draw = cqState.myScore === cqState.rivalScore;
+
+  // XP
+  const xpEarned = win ? 80 : draw ? 40 : 20;
+  state.xp += xpEarned;
+
+  // Salvar desafio
+  activeCh.status     = 'done';
+  activeCh.myScore    = cqState.myScore;
+  activeCh.rivalScore = cqState.rivalScore;
+
+  // Salvar histórico primeiro
+  const hist = getHistory();
+  hist.unshift({ category:activeCh.category, difficulty:activeCh.difficulty, correct:cqState.correct, total:cqState.total, xp:xpEarned, isChallenge:true, vs:rival.name, date:Date.now() });
+  localStorage.setItem('logiq-history', JSON.stringify(hist));
+
+  // Salvar desafio na lista
+  const challenges = getChallenges();
+  const idx = challenges.findIndex(ch => ch.id === activeCh.id);
+  if (idx >= 0) challenges[idx] = activeCh; else challenges.unshift(activeCh);
+  localStorage.setItem('logiq-challenges', JSON.stringify(challenges));
+
+  // Salvar XP e bestStreak
+  localStorage.setItem('logiq-xp', state.xp);
+  localStorage.setItem('logiq-bestStreak', state.bestStreak);
+
+  // Tela resultado
+  $set('cr-emoji','textContent',win ? '🏆' : draw ? '🤝' : '💀');
+  $set('cr-title','textContent',win ? 'Vitória!' : draw ? 'Empate!' : 'Derrota');
+  ($id('cr-title')||{style:{}}).style.color = win ? 'var(--cyan)' : draw ? 'var(--yellow)' : 'var(--red)';
+  $set('cr-sub','textContent',`vs ${rival.name} · +${xpEarned} XP`);
+  $set('cr-rival-who','textContent', rival.name);
+  $set('cr-correct','textContent', cqState.correct + '/' + cqState.total);
+  $set('cr-wrong','textContent',   cqState.total - cqState.correct);
+  $set('cr-xp','textContent',      '+' + xpEarned);
+  const myBox    = $id('cr-my-box');
+  const rivalBox = $id('cr-rival-box');
+  if(myBox)    myBox.classList.toggle('winner',  win||draw);
+  if(rivalBox) rivalBox.classList.toggle('winner', !win&&!draw);
+
+  // Mostrar tela primeiro
+  showScreen('screen-challenge-result');
+
+  // Animar contagem dos scores
+  animateCount('cr-my-score',    0, cqState.myScore,    800);
+  animateCount('cr-rival-score', 0, cqState.rivalScore, 800);
+
+  // Confetti na vitória
+  if (win) setTimeout(() => launchConfetti(), 300);
+}
+
+function abandonChallenge() {
+  clearInterval(cqState.timer);
+  if (activeCh) { activeCh.status = 'active'; saveChallenge(activeCh); }
+  openChallenges();
+}
+
+// ══════════════════════════════════════════════════════
+// HISTÓRICO
+// ══════════════════════════════════════════════════════
+let historyFilter = 'all';
+
+function openHistory() {
+  historyFilter = 'all';
+  document.querySelectorAll('.filter-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  renderHistory();
+  showScreen('screen-history');
+}
+
+function filterHistory(cat) {
+  historyFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    const match = b.getAttribute('onclick')?.includes("'"+cat+"'");
+    b.classList.toggle('active', !!match);
+  });
+  renderHistory();
+}
+
+function renderHistory() {
+  const all = getHistory();
+  const filtered = historyFilter === 'all' ? all : all.filter(h => h.category === historyFilter);
+
+  // Summary
+  const totalQ   = all.reduce((a,h) => a + (h.total||0), 0);
+  const totalC   = all.reduce((a,h) => a + (h.correct||0), 0);
+  const totalXP  = all.reduce((a,h) => a + (h.xp||0), 0);
+  const accuracy = totalQ > 0 ? Math.round((totalC/totalQ)*100) : 0;
+  ($id('history-summary')||{}).innerHTML = [
+    ['Sessões', all.length],
+    ['Questões', totalQ],
+    ['Precisão geral', accuracy+'%'],
+    ['XP total', totalXP],
+  ].map(([l,v]) => `<div class="stat-mini"><div class="stat-mini-val">${v}</div><div class="stat-mini-lbl">${l}</div></div>`).join('');
+
+  // List
+  if (!filtered.length) {
+    $set('history-list','innerHTML',`<div class="history-empty">Nenhuma sessão${historyFilter!=='all'?' nesta categoria':''} ainda.</div>`);
+    return;
+  }
+
+  ($id('history-list')||{}).innerHTML = filtered.map(h => {
+    const cat  = CATEGORIES[h.category] || { icon:'?', label:h.category };
+    const diff = DIFFICULTIES[h.difficulty] || { label:h.difficulty, color:'var(--muted)' };
+    const acc  = h.total > 0 ? Math.round((h.correct/h.total)*100) : 0;
+    const accColor = acc >= 80 ? 'var(--cyan)' : acc >= 50 ? 'var(--yellow)' : 'var(--red)';
+    const dateStr  = h.date ? new Date(h.date).toLocaleDateString('pt-BR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+    return `<div class="history-row">
+      <div class="history-icon">${cat.icon}</div>
+      <div class="history-info">
+        <div class="history-cat">${cat.label}${h.isChallenge ? ' <span style="font-size:11px;color:var(--red)">⚔️ desafio</span>' : ''}</div>
+        <div class="history-meta">${diff.label} · ${h.correct||0}/${h.total||0} acertos · ${dateStr}</div>
+      </div>
+      <div class="history-right">
+        <div class="history-acc" style="color:${accColor}">${acc}%</div>
+        <div class="history-xp">+${h.xp||0} XP</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── PATCH showGameOver para salvar no histórico ───────
+
+// ── INIT ──────────────────────────────────────────────
+loadData();
+updateHomeXP();
+// Atualizar badge de desafios
+(function() {
+  const list = getChallenges();
+  const pending = list.filter(c => c.status === 'active').length;
+  const badge = $id('challenge-badge-count');
+  if (badge && pending) { badge.style.display = 'inline'; badge.textContent = pending; }
+})();
+</script>
+
+<script>
+// ── SERVICE WORKER ────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(r => console.log('SW registrado:', r.scope))
+      .catch(e => console.log('SW erro:', e));
+  });
+}
+</script>
+</body>
+</html>

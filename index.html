@@ -15,6 +15,8 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -403,6 +405,25 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 @keyframes crFadeUp   { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
 @keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
 
+
+/* ── AUTH SCREEN ─────────────────────────────────────── */
+#screen-auth.active { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 20px; }
+.auth-card { width:100%; max-width:380px; background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:28px 24px; }
+.auth-logo { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:36px; color:var(--text); letter-spacing:-1px; text-align:center; margin-bottom:4px; }
+.auth-logo span { color:var(--violet); }
+.auth-subtitle { text-align:center; color:var(--muted); font-size:13px; margin-bottom:28px; }
+.auth-tabs { display:flex; background:var(--border2); border-radius:10px; padding:3px; gap:3px; margin-bottom:22px; }
+.auth-tab { flex:1; padding:9px; border:none; background:transparent; border-radius:8px; cursor:pointer; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px; color:var(--muted); transition:all .2s; }
+.auth-tab.active { background:var(--surface); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,.2); }
+.auth-input { width:100%; padding:13px 14px; background:var(--border2); border:1.5px solid var(--border); border-radius:10px; font-family:'Inter',sans-serif; font-size:15px; color:var(--text); margin-bottom:12px; outline:none; transition:border-color .2s; }
+.auth-input:focus { border-color:var(--violet); }
+.auth-input::placeholder { color:var(--muted); }
+.auth-btn { width:100%; padding:14px; background:linear-gradient(135deg,var(--violet),var(--violetL)); border:none; border-radius:10px; color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; cursor:pointer; margin-top:4px; transition:opacity .2s; }
+.auth-btn:hover { opacity:.9; }
+.auth-btn:disabled { opacity:.5; cursor:not-allowed; }
+.auth-error { color:var(--red); font-size:13px; text-align:center; margin-bottom:10px; min-height:18px; }
+.auth-success { color:var(--cyan); font-size:13px; text-align:center; margin-bottom:10px; }
+
 @keyframes floatUp   { 0% { opacity:1; transform:translateX(-50%) translateY(0); } 100% { opacity:0; transform:translateX(-50%) translateY(-60px); } }
 @keyframes pulse     { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
 @keyframes streakPop { 0% { transform:scale(0.7); opacity:0; } 70% { transform:scale(1.1); } 100% { transform:scale(1); opacity:1; } }
@@ -410,6 +431,35 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 </head>
 <body>
 <div id="app">
+
+<!-- ══ AUTH ══════════════════════════════════════════════ -->
+<div id="screen-auth" class="screen">
+  <div class="auth-card">
+    <div class="auth-logo">LOG<span>IQ</span></div>
+    <div class="auth-subtitle">Entre para competir no ranking global</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login"  onclick="authSwitchTab('login')">Entrar</button>
+      <button class="auth-tab"        id="tab-signup" onclick="authSwitchTab('signup')">Criar conta</button>
+    </div>
+    <div id="auth-error"   class="auth-error"></div>
+    <div id="auth-success" class="auth-success" style="display:none"></div>
+
+    <!-- Login -->
+    <div id="form-login">
+      <input class="auth-input" id="login-email"    type="email"    placeholder="E-mail" autocomplete="email">
+      <input class="auth-input" id="login-password" type="password" placeholder="Senha"  autocomplete="current-password">
+      <button class="auth-btn" id="login-btn" onclick="doLogin()">Entrar</button>
+    </div>
+
+    <!-- Signup -->
+    <div id="form-signup" style="display:none">
+      <input class="auth-input" id="signup-username" type="text"     placeholder="Username (visível no ranking)" autocomplete="off" maxlength="20">
+      <input class="auth-input" id="signup-email"    type="email"    placeholder="E-mail" autocomplete="email">
+      <input class="auth-input" id="signup-password" type="password" placeholder="Senha (mín. 6 caracteres)" autocomplete="new-password">
+      <button class="auth-btn" id="signup-btn" onclick="doSignup()">Criar conta</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ SPLASH ══════════════════════════════════════════ -->
 <div id="screen-splash" class="screen active">
@@ -926,13 +976,14 @@ function updateHomeXP() {
 // ── SCREENS ──────────────────────────────────────────
 function onSplashStart() {
   loadData();
-  updateHomeXP();
-  // Desativar splash explicitamente
-  var splash = document.getElementById('screen-splash');
-  if (splash) splash.classList.remove('active');
-  // Ativar home explicitamente
-  var home = document.getElementById('screen-home');
-  if (home) home.classList.add('active');
+  if (_sbUser) {
+    // Já logado — vai direto para home
+    updateHomeXP();
+    showScreen('home');
+  } else {
+    // Não logado — vai para auth
+    showScreen('screen-auth');
+  }
 }
 
 function showScreen(id) {
@@ -1415,18 +1466,122 @@ function showGameOver() {
 
 
 // ══════════════════════════════════════════════════════
-// PERSISTÊNCIA
+// SUPABASE
+// ══════════════════════════════════════════════════════
+const _sb = supabase.createClient('https://glmakzmtklycnlolfybi.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdsbWFrem10a2x5Y25sb2xmeWJpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3MTgxMzQsImV4cCI6MjA5NzI5NDEzNH0.k1kagseYh243ixUA-sqk2pPQYudPzvrIqz92HYTWpHk');
+let _sbUser    = null;  // auth.User atual
+let _sbProfile = null;  // linha em profiles
+
+// ── Auth helpers ──────────────────────────────────────
+async function sbGetSession() {
+  const { data } = await _sb.auth.getSession();
+  return data?.session?.user || null;
+}
+
+async function sbLoadProfile(userId) {
+  const { data } = await _sb.from('profiles').select('*').eq('id', userId).single();
+  return data;
+}
+
+// Após login/signup: carrega perfil e vai para home
+async function sbOnAuth(user) {
+  _sbUser = user;
+  _sbProfile = await sbLoadProfile(user.id);
+  if (_sbProfile) {
+    state.xp         = _sbProfile.xp         || 0;
+    state.bestStreak = _sbProfile.best_streak || 0;
+  }
+  loadData(); // mantém localStorage como cache
+  updateHomeXP();
+  showScreen('home');
+}
+
+// ── Tela de Auth ──────────────────────────────────────
+function authSwitchTab(tab) {
+  $id('form-login') .style.display = tab === 'login'  ? 'block' : 'none';
+  $id('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
+  $cls('tab-login') .toggle('active', tab === 'login');
+  $cls('tab-signup').toggle('active', tab === 'signup');
+  $id('auth-error').textContent = '';
+  ($id('auth-success')||{}).style.display = 'none';
+}
+
+async function doLogin() {
+  const email    = ($id('login-email')   ||{}).value?.trim();
+  const password = ($id('login-password')||{}).value;
+  const btn      = $id('login-btn');
+  if (!email || !password) { $id('auth-error').textContent = 'Preencha e-mail e senha.'; return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Entrando...'; }
+  $id('auth-error').textContent = '';
+
+  const { data, error } = await _sb.auth.signInWithPassword({ email, password });
+  if (error) {
+    $id('auth-error').textContent = error.message.includes('Invalid') ? 'E-mail ou senha incorretos.' : error.message;
+    if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
+    return;
+  }
+  await sbOnAuth(data.user);
+  if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
+}
+
+async function doSignup() {
+  const username = ($id('signup-username')||{}).value?.trim();
+  const email    = ($id('signup-email')   ||{}).value?.trim();
+  const password = ($id('signup-password')||{}).value;
+  const btn      = $id('signup-btn');
+  $id('auth-error').textContent = '';
+
+  if (!username || username.length < 3) { $id('auth-error').textContent = 'Username precisa ter ao menos 3 caracteres.'; return; }
+  if (!email) { $id('auth-error').textContent = 'Preencha o e-mail.'; return; }
+  if (!password || password.length < 6) { $id('auth-error').textContent = 'Senha precisa ter ao menos 6 caracteres.'; return; }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Criando conta...'; }
+
+  // Verificar se username já existe
+  const { data: existing } = await _sb.from('profiles').select('id').eq('username', username).maybeSingle();
+  if (existing) { $id('auth-error').textContent = 'Username já em uso. Escolha outro.'; if(btn){btn.disabled=false;btn.textContent='Criar conta';} return; }
+
+  const { data, error } = await _sb.auth.signUp({ email, password });
+  if (error) {
+    $id('auth-error').textContent = error.message;
+    if (btn) { btn.disabled = false; btn.textContent = 'Criar conta'; }
+    return;
+  }
+
+  // Criar perfil
+  await _sb.from('profiles').insert({
+    id: data.user.id, username,
+    xp:0, best_streak:0, total_correct:0, total_questions:0
+  });
+
+  const succ = $id('auth-success');
+  if (succ) { succ.style.display='block'; succ.textContent='Conta criada! Entrando...'; }
+  await sbOnAuth(data.user);
+  if (btn) { btn.disabled=false; btn.textContent='Criar conta'; }
+}
+
+// ══════════════════════════════════════════════════════
+// PERSISTÊNCIA (localStorage como cache + Supabase como fonte de verdade)
 // ══════════════════════════════════════════════════════
 function saveData() {
   localStorage.setItem('logiq-xp',        state.xp);
   localStorage.setItem('logiq-bestStreak', state.bestStreak);
   localStorage.setItem('logiq-history',    JSON.stringify(getHistory()));
   localStorage.setItem('logiq-challenges', JSON.stringify(getChallenges()));
+  // Sync Supabase (assíncrono, não bloqueia)
+  if (_sbUser) {
+    _sb.from('profiles').update({
+      xp:          state.xp,
+      best_streak: state.bestStreak,
+    }).eq('id', _sbUser.id).then(() => {});
+  }
 }
+
 function loadData() {
   state.xp         = parseInt(localStorage.getItem('logiq-xp') || '0');
   state.bestStreak = parseInt(localStorage.getItem('logiq-bestStreak') || '0');
 }
+
 function getHistory() {
   try { return JSON.parse(localStorage.getItem('logiq-history') || '[]'); } catch { return []; }
 }
@@ -1438,6 +1593,18 @@ function saveHistory(entry) {
   h.unshift({ ...entry, date: Date.now() });
   if (h.length > 100) h.splice(100);
   localStorage.setItem('logiq-history', JSON.stringify(h));
+  // Salvar sessão no Supabase
+  if (_sbUser) {
+    _sb.from('quiz_sessions').insert({
+      user_id:    _sbUser.id,
+      category:   entry.category,
+      difficulty: entry.difficulty,
+      correct:    entry.correct  || 0,
+      total:      entry.total    || 0,
+      xp_earned:  entry.xp      || 0,
+      max_streak: entry.streak   || 0,
+    }).then(() => {});
+  }
 }
 function saveChallenge(ch) {
   const list = getChallenges();
@@ -1489,43 +1656,97 @@ function switchRankTab(tab) {
   renderRanking();
 }
 
-function renderRanking() {
-  const list = document.getElementById('ranking-list');
-  const myPos = document.getElementById('my-rank-pos');
+async function renderRanking() {
+  const listEl = document.getElementById('ranking-list');
+  const myPos  = document.getElementById('my-rank-pos');
+  if (!listEl) return;
 
-  if (currentRankTab === 'cat') {
-    // Por categoria — mostra mini-leaderboards
-    let html = '';
-    Object.entries(CAT_LEADERS).forEach(([catId, players]) => {
-      const cat = CATEGORIES[catId];
-      html += `<div style="margin-bottom:20px">
-        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--text);margin-bottom:8px">${cat.icon} ${cat.label}</div>`;
-      players.forEach((p, i) => {
-        const medal = ['🥇','🥈','🥉'][i];
-        html += rankRowHtml(p, i+1, medal, false);
+  listEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">Carregando ranking...</div>';
+
+  try {
+    let players = [];
+
+    if (currentRankTab === 'global') {
+      // Buscar top 50 do Supabase
+      const { data, error } = await _sb
+        .from('profiles')
+        .select('id, username, xp')
+        .order('xp', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      players = (data || []).map((p, i) => ({
+        name:  p.username,
+        xp:    p.xp,
+        color: avatarColor(p.username),
+        isMe:  _sbUser && p.id === _sbUser.id,
+        rank:  i + 1,
+      }));
+
+      // Se usuário não está no top 50, adiciona no final
+      if (_sbUser && !players.find(p => p.isMe)) {
+        players.push({
+          name: _sbProfile?.username || 'Você',
+          xp: state.xp, color: '#6C63FF', isMe: true,
+          rank: players.length + 1,
+        });
+      }
+
+    } else if (currentRankTab === 'week') {
+      // Ranking da semana: soma XP das sessões dos últimos 7 dias
+      const since = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+      const { data } = await _sb
+        .from('quiz_sessions')
+        .select('user_id, xp_earned, profiles(username)')
+        .gte('created_at', since);
+
+      // Agrupar por user
+      const map = {};
+      (data || []).forEach(s => {
+        const uid  = s.user_id;
+        const name = s.profiles?.username || '?';
+        if (!map[uid]) map[uid] = { name, xp: 0, isMe: _sbUser && uid === _sbUser.id };
+        map[uid].xp += s.xp_earned;
       });
-      html += '</div>';
-    });
-    list.innerHTML = html;
-    myPos.textContent = '—';
-    return;
+
+      players = Object.values(map)
+        .sort((a,b) => b.xp - a.xp)
+        .slice(0, 50)
+        .map((p, i) => ({ ...p, color: avatarColor(p.name), rank: i+1 }));
+
+      // Garantir que o usuário aparece
+      if (_sbUser && !players.find(p => p.isMe)) {
+        const weekXp = (data||[]).filter(s => s.user_id === _sbUser.id).reduce((a,s) => a + s.xp_earned, 0);
+        players.push({ name: _sbProfile?.username||'Você', xp: weekXp, color:'#6C63FF', isMe:true, rank: players.length+1 });
+      }
+
+    } else {
+      // Categoria — fallback local com dados reais
+      listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:14px">Em breve: ranking por categoria</div>';
+      if (myPos) myPos.textContent = '—';
+      return;
+    }
+
+    // Renderizar
+    const myRankEntry = players.find(p => p.isMe);
+    if (myPos) myPos.textContent = myRankEntry ? '#' + myRankEntry.rank : '—';
+
+    listEl.innerHTML = players.map(p => {
+      const medal = p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : null;
+      return rankRowHtml(p, p.rank, medal, p.isMe);
+    }).join('') || '<div style="text-align:center;padding:40px;color:var(--muted)">Nenhum jogador ainda.</div>';
+
+  } catch(e) {
+    console.error('Ranking error:', e);
+    listEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">Erro ao carregar ranking. Verifique sua conexão.</div>';
   }
+}
 
-  const pool = currentRankTab === 'week' ? WEEK_PLAYERS : FAKE_PLAYERS;
-  const myXp = state.xp;
-  const myName = 'Você';
-
-  // Mescla jogador atual na lista
-  const all = [...pool, { name: myName, xp: myXp, color: '#6C63FF', isMe: true }];
-  all.sort((a,b) => b.xp - a.xp);
-  const myRank = all.findIndex(p => p.isMe) + 1;
-
-  list.innerHTML = all.map((p, i) => {
-    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null;
-    return rankRowHtml(p, i+1, medal, p.isMe);
-  }).join('');
-
-  myPos.textContent = '#' + myRank;
+function avatarColor(name) {
+  const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#A78BFA','#F7DC6F','#DDA0DD','#98D8C8','#BB8FCE','#85C1E9'];
+  let hash = 0;
+  for (let i = 0; i < (name||'').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
 }
 
 function rankRowHtml(p, pos, medal, isMe) {

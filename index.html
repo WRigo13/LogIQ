@@ -424,6 +424,38 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 .auth-error { color:var(--red); font-size:13px; text-align:center; margin-bottom:10px; min-height:18px; }
 .auth-success { color:var(--cyan); font-size:13px; text-align:center; margin-bottom:10px; }
 
+
+/* ── SESSION SCORE ───────────────────────────────────── */
+.ss-header { text-align:center; padding:32px 0 24px; }
+.ss-emoji  { font-size:72px; display:block; margin-bottom:14px; animation:crEmojiPop .5s .1s both; }
+.ss-title  { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:30px; color:var(--text); animation:crFadeUp .4s .25s both; }
+.ss-sub    { color:var(--muted); font-size:15px; margin-top:6px; animation:crFadeUp .4s .35s both; }
+
+.ss-accuracy-ring { position:relative; width:140px; height:140px; margin:0 auto 28px; animation:crFadeUp .5s .4s both; }
+.ss-ring-svg { transform:rotate(-90deg); }
+.ss-ring-bg  { fill:none; stroke:var(--border2); stroke-width:10; }
+.ss-ring-fill{ fill:none; stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1s ease; }
+.ss-ring-text{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.ss-ring-pct { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:28px; color:var(--text); }
+.ss-ring-lbl { font-size:11px; color:var(--muted); letter-spacing:1px; margin-top:2px; }
+
+.ss-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; animation:crFadeUp .4s .55s both; }
+.ss-stat { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; text-align:center; }
+.ss-stat-val { font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:24px; color:var(--violet); }
+.ss-stat-lbl { font-size:11px; color:var(--muted); margin-top:4px; text-transform:uppercase; letter-spacing:1px; }
+
+.ss-perf-bar { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:20px; animation:crFadeUp .4s .65s both; }
+.ss-perf-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.ss-perf-row:last-child { margin-bottom:0; }
+.ss-perf-icon { width:28px; text-align:center; font-size:16px; }
+.ss-perf-info { flex:1; }
+.ss-perf-label{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--text); }
+.ss-perf-track{ height:5px; background:var(--border2); border-radius:3px; margin-top:5px; overflow:hidden; }
+.ss-perf-fill { height:100%; border-radius:3px; transition:width 1s ease; }
+.ss-perf-num  { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; min-width:36px; text-align:right; }
+
+.ss-btns { display:flex; flex-direction:column; gap:10px; animation:crFadeUp .4s .75s both; }
+
 @keyframes floatUp   { 0% { opacity:1; transform:translateX(-50%) translateY(0); } 100% { opacity:0; transform:translateX(-50%) translateY(-60px); } }
 @keyframes pulse     { 0%,100% { opacity:1; } 50% { opacity:0.35; } }
 @keyframes streakPop { 0% { transform:scale(0.7); opacity:0; } 70% { transform:scale(1.1); } 100% { transform:scale(1); opacity:1; } }
@@ -811,7 +843,84 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   </div>
   <div id="history-list"></div>
 </div>
-</div><!-- /screen-inner -->
+</div><!-- /screen-inner --><!-- ══ SESSION SCORE ═════════════════════════════════════ -->
+<div id="screen-session-score" class="screen"><div class="screen-inner">
+  <canvas id="ss-confetti" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50"></canvas>
+
+  <div class="ss-header">
+    <span class="ss-emoji" id="ss-emoji">🏆</span>
+    <div class="ss-title" id="ss-title">Sessão concluída!</div>
+    <div class="ss-sub"   id="ss-sub"></div>
+  </div>
+
+  <!-- Anel de precisão -->
+  <div class="ss-accuracy-ring">
+    <svg class="ss-ring-svg" viewBox="0 0 140 140" width="140" height="140">
+      <circle class="ss-ring-bg"   cx="70" cy="70" r="60"/>
+      <circle class="ss-ring-fill" cx="70" cy="70" r="60" id="ss-ring-fill"
+        stroke-dasharray="377" stroke-dashoffset="377"/>
+    </svg>
+    <div class="ss-ring-text">
+      <span class="ss-ring-pct" id="ss-ring-pct">0%</span>
+      <span class="ss-ring-lbl">PRECISÃO</span>
+    </div>
+  </div>
+
+  <!-- Grid de stats -->
+  <div class="ss-grid">
+    <div class="ss-stat">
+      <div class="ss-stat-val" id="ss-correct">0</div>
+      <div class="ss-stat-lbl">Acertos</div>
+    </div>
+    <div class="ss-stat">
+      <div class="ss-stat-val" id="ss-wrong" style="color:var(--red)">0</div>
+      <div class="ss-stat-lbl">Erros</div>
+    </div>
+    <div class="ss-stat">
+      <div class="ss-stat-val" id="ss-xp" style="color:var(--cyan)">+0</div>
+      <div class="ss-stat-lbl">XP ganho</div>
+    </div>
+    <div class="ss-stat">
+      <div class="ss-stat-val" id="ss-streak">🔥0</div>
+      <div class="ss-stat-lbl">Streak máx.</div>
+    </div>
+  </div>
+
+  <!-- Barra de desempenho por tipo -->
+  <div class="ss-perf-bar">
+    <div class="ss-perf-row">
+      <div class="ss-perf-icon">✓</div>
+      <div class="ss-perf-info">
+        <div class="ss-perf-label">Acertos</div>
+        <div class="ss-perf-track"><div class="ss-perf-fill" id="ss-bar-correct" style="background:var(--cyan);width:0%"></div></div>
+      </div>
+      <div class="ss-perf-num" id="ss-bar-correct-num" style="color:var(--cyan)">0</div>
+    </div>
+    <div class="ss-perf-row">
+      <div class="ss-perf-icon">✗</div>
+      <div class="ss-perf-info">
+        <div class="ss-perf-label">Erros</div>
+        <div class="ss-perf-track"><div class="ss-perf-fill" id="ss-bar-wrong" style="background:var(--red);width:0%"></div></div>
+      </div>
+      <div class="ss-perf-num" id="ss-bar-wrong-num" style="color:var(--red)">0</div>
+    </div>
+    <div class="ss-perf-row">
+      <div class="ss-perf-icon">⏱</div>
+      <div class="ss-perf-info">
+        <div class="ss-perf-label">Tempo esgotado</div>
+        <div class="ss-perf-track"><div class="ss-perf-fill" id="ss-bar-timeout" style="background:var(--yellow);width:0%"></div></div>
+      </div>
+      <div class="ss-perf-num" id="ss-bar-timeout-num" style="color:var(--yellow)">0</div>
+    </div>
+  </div>
+
+  <div class="ss-btns">
+    <button class="primary-btn" onclick="replaySession()">Jogar novamente</button>
+    <button class="primary-btn" style="background:var(--surface);border:1px solid var(--border);color:var(--text)" onclick="goHome()">Voltar ao início</button>
+  </div>
+</div></div>
+
+
 
 
 <!-- ══ INFO MODAL ════════════════════════════════════ -->
@@ -946,9 +1055,14 @@ let state = {
 // ── TEMA ─────────────────────────────────────────────
 function setTheme(t) {
   state.theme = t;
-  document.documentElement.setAttribute('data-theme', t === 'black' ? 'black' : '');
+  const attr = t === 'black' ? 'black' : t === 'white' ? 'white' : '';
+  document.documentElement.setAttribute('data-theme', attr);
+  // Forçar background no body e #app para o tema branco
+  document.body.style.background = '';
+  document.getElementById('app').style.background = '';
   $cls('theme-night').toggle('active', t === 'night');
   $cls('theme-black').toggle('active', t === 'black');
+  $cls('theme-white').toggle('active', t === 'white');
   localStorage.setItem('logiq-theme', t);
 }
 (function() {
@@ -1224,11 +1338,33 @@ function getQuestion(cat, diff) {
   return available[idx];
 }
 
+// Limite de questões por categoria/dificuldade (tamanho real do banco)
+const QUESTION_LIMITS = {
+  sequences:     { easy:15, medium:15, hard:10 },
+  matrices:      { easy:11, medium:11, hard:8  },
+  propositional: { easy:16, medium:16, hard:16 },
+  probability:   { easy:10, medium:10, hard:10 },
+};
+
+function getQuestionLimit() {
+  const cat  = state.category;
+  const diff = state.difficulty;
+  return (QUESTION_LIMITS[cat] && QUESTION_LIMITS[cat][diff]) || 10;
+}
+
 function loadQuestion() {
   clearInterval(state.timerInterval);
+
+  // Verificar se atingiu o limite da sessão
+  const limit = getQuestionLimit();
+  if (state.questionCount >= limit) {
+    showSessionScore();
+    return;
+  }
+
   state.answered = false; state.selectedOption = null;
   state.questionCount++;
-  $set('q-counter','textContent','#' + state.questionCount);
+  $set('q-counter','textContent', state.questionCount + '/' + limit);
   $cls('next-btn').remove('visible');
   $set('quiz-xp','textContent',state.xp + ' XP');
 
@@ -1328,7 +1464,15 @@ function handleTimeout() {
   if (state.lives <= 0) setTimeout(showGameOver, 1700);
 }
 
-function nextQuestion() { loadQuestion(); }
+function nextQuestion() {
+  // Se já terminou o limite, mostrar score
+  const limit = getQuestionLimit();
+  if (state.questionCount >= limit) {
+    showSessionScore();
+    return;
+  }
+  loadQuestion();
+}
 
 // ── UI HELPERS ────────────────────────────────────────
 function updateLives() {
@@ -1448,6 +1592,152 @@ function launchConfetti() {
     else { ctx.clearRect(0,0,canvas.width,canvas.height); }
   }
   frame = requestAnimationFrame(draw);
+}
+
+
+// ══════════════════════════════════════════════════════
+// TELA DE SCORE DA SESSÃO
+// ══════════════════════════════════════════════════════
+function showSessionScore() {
+  clearInterval(state.timerInterval);
+
+  // Salvar no histórico e Supabase
+  saveHistory({
+    category:  state.category,
+    difficulty: state.difficulty,
+    correct:   state.sessionCorrect,
+    total:     state.sessionTotal,
+    xp:        state.sessionXp,
+    streak:    state.bestStreak,
+  });
+  if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+  saveData();
+
+  const total    = state.sessionTotal;
+  const correct  = state.sessionCorrect;
+  const wrong    = state.sessionWrong;
+  const timeout  = total - correct - wrong;
+  const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+  const xp       = state.sessionXp;
+
+  // Emoji e mensagem baseados na precisão
+  let emoji, title, sub;
+  if (accuracy >= 90) { emoji='🏆'; title='Excelente!';      sub='Domínio total — desempenho impressionante!'; }
+  else if (accuracy >= 75) { emoji='🎯'; title='Muito bom!';  sub='Você está no caminho certo!'; }
+  else if (accuracy >= 60) { emoji='💪'; title='Bom trabalho!'; sub='Continue praticando para melhorar!'; }
+  else if (accuracy >= 40) { emoji='📚'; title='Continue treinando!'; sub='A prática leva à perfeição.'; }
+  else { emoji='💡'; title='Não desista!'; sub='Cada erro é uma oportunidade de aprender.'; }
+
+  // Preencher elementos
+  $set('ss-emoji',   'textContent', emoji);
+  $set('ss-title',   'textContent', title);
+  $set('ss-sub',     'textContent', sub);
+  $set('ss-correct', 'textContent', correct);
+  $set('ss-wrong',   'textContent', wrong);
+  $set('ss-xp',      'textContent', '+' + xp);
+  $set('ss-streak',  'textContent', '🔥' + state.bestStreak);
+
+  // Cor do anel baseada na precisão
+  const ringColor = accuracy >= 75 ? 'var(--cyan)' : accuracy >= 50 ? 'var(--yellow)' : 'var(--red)';
+  const ring = $id('ss-ring-fill');
+  if (ring) {
+    ring.style.stroke = ringColor;
+    // Animar depois de mostrar a tela
+    setTimeout(() => {
+      const circumference = 377; // 2π×60
+      const offset = circumference - (accuracy / 100) * circumference;
+      ring.style.strokeDashoffset = offset;
+    }, 200);
+  }
+
+  // Texto da precisão (animado)
+  setTimeout(() => {
+    let current = 0;
+    const interval = setInterval(() => {
+      current = Math.min(current + 2, accuracy);
+      $set('ss-ring-pct', 'textContent', current + '%');
+      if (current >= accuracy) clearInterval(interval);
+    }, 20);
+  }, 300);
+
+  // Barras de desempenho
+  setTimeout(() => {
+    const pCorrect = total > 0 ? (correct  / total) * 100 : 0;
+    const pWrong   = total > 0 ? (wrong    / total) * 100 : 0;
+    const pTimeout = total > 0 ? (timeout  / total) * 100 : 0;
+    const bc = $id('ss-bar-correct'); if(bc) bc.style.width = pCorrect + '%';
+    const bw = $id('ss-bar-wrong');   if(bw) bw.style.width = pWrong   + '%';
+    const bt = $id('ss-bar-timeout'); if(bt) bt.style.width = pTimeout + '%';
+    $set('ss-bar-correct-num', 'textContent', correct);
+    $set('ss-bar-wrong-num',   'textContent', wrong);
+    $set('ss-bar-timeout-num', 'textContent', timeout);
+  }, 400);
+
+  showScreen('screen-session-score');
+
+  // Confetti se precisão >= 75%
+  if (accuracy >= 75) {
+    setTimeout(() => {
+      const canvas = $id('ss-confetti');
+      if (canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        launchConfettiOn(canvas);
+      }
+    }, 500);
+  }
+}
+
+function launchConfettiOn(canvas) {
+  const ctx = canvas.getContext('2d');
+  const colors = ['#6C63FF','#00F5C4','#FFD166','#FF4D6D','#A78BFA','#00C6FF'];
+  const pieces = Array.from({length:100}, () => ({
+    x: Math.random() * canvas.width,
+    y: -20 - Math.random() * 200,
+    w: 8 + Math.random() * 8, h: 4 + Math.random() * 6,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    vx: (Math.random() - 0.5) * 4, vy: 3 + Math.random() * 4,
+    rot: Math.random() * 360, vrot: (Math.random() - 0.5) * 8,
+    opacity: 1,
+  }));
+  let t = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    t++;
+    let alive = false;
+    for (const p of pieces) {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.06; p.rot += p.vrot;
+      if (t > 90) p.opacity = Math.max(0, p.opacity - 0.012);
+      if (p.y < canvas.height + 20) alive = true;
+      ctx.save();
+      ctx.globalAlpha = p.opacity;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    }
+    if (alive && t < 300) requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  requestAnimationFrame(draw);
+}
+
+function replaySession() {
+  // Reiniciar sessão com mesma categoria e dificuldade
+  const cat = state.category;
+  state.lives = 3; state.streak = 0;
+  state.sessionXp = 0; state.sessionCorrect = 0;
+  state.sessionWrong = 0; state.sessionTotal = 0;
+  state.questionCount = 0;
+  // Resetar pool de questões usadas para nova sessão
+  const diff = cat === 'propositional' ? 'all' : state.difficulty;
+  const key = cat + '_' + diff;
+  if (usedQuestions[key]) usedQuestions[key] = [];
+  [1,2,3].forEach(i => $cls('life-'+i).remove('lost'));
+  $cls('streak-badge').remove('visible');
+  showScreen('quiz');
+  loadQuestion();
 }
 
 // ── GAME OVER ─────────────────────────────────────────
